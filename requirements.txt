@@ -5,3 +5,4 @@ aiosqlite
 openai
 apscheduler
 trafilatura
+uvicorn[standard]

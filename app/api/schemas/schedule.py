@@ -42,3 +42,10 @@ class ScheduleResponse(BaseModel):
     published_at: datetime | None = Field(None, description="Actual publication time if published")
     created_at: datetime = Field(..., description="When the schedule was created")
     updated_at: datetime = Field(..., description="When the schedule was last updated")
+
+
+class ScheduleListResponse(BaseModel):
+    """Response schema for a list of scheduled posts."""
+
+    items: list[ScheduleResponse] = Field(..., description="Scheduled posts")
+    count: int = Field(..., description="Total number of items")

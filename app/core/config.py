@@ -62,6 +62,7 @@ class Settings(BaseSettings):
 
     # ── telegram bot ───────────────────────────────────────────────
     bot_token: SecretStr = Field(default=SecretStr(""))
+    miniapp_url: str = Field(default="")
 
     # ── api ────────────────────────────────────────────────────────
     api_host: str = "0.0.0.0"

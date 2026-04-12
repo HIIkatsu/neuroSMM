@@ -68,12 +68,16 @@ class OpenAITextProvider:
         self,
         *,
         api_key: str,
+        base_url: str | None = None,
         model: str = "gpt-4o-mini",
         default_max_tokens: int = 2048,
     ) -> None:
         from openai import AsyncOpenAI
 
-        self._client = AsyncOpenAI(api_key=api_key)
+        kwargs: dict = {"api_key": api_key}
+        if base_url:
+            kwargs["base_url"] = base_url
+        self._client = AsyncOpenAI(**kwargs)
         self._model = model
         self._default_max_tokens = default_max_tokens
 
@@ -103,9 +107,13 @@ class OpenAITextProvider:
                 tokens_used=tokens_used,
             )
         except Exception as exc:
+            # Log full error for debugging but return safe message
+            import logging
+
+            logging.getLogger(__name__).error("Text generation provider error: %s", exc)
             return GenerationResult.failure(
                 generation_type=GenerationType.TEXT,
-                error_message=str(exc),
+                error_message="Ошибка генерации текста. Проверьте конфигурацию провайдера.",
                 prompt_used=prompt,
                 model_name=self._model,
             )

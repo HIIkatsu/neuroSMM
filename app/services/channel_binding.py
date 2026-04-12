@@ -89,24 +89,24 @@ class ChannelBindingService:
             If Telegram API calls fail.
         """
         if not channel_identifier or not channel_identifier.strip():
-            raise ValidationError("Channel identifier must not be empty")
+            raise ValidationError("Необходимо указать идентификатор канала")
 
         channel_identifier = channel_identifier.strip()
 
         # 1. Verify project ownership
         project = await self._project_repo.get_by_id(project_id)
         if project.owner_id != user_id:
-            raise AuthorizationError("You do not have access to this project")
+            raise AuthorizationError("У вас нет доступа к этому проекту")
 
         # 2. Verify the channel exists
         try:
             chat_info = await self._telegram_client.get_chat(channel_identifier)
         except TelegramClientError as exc:
             raise ExternalServiceError(
-                f"Could not verify channel: {exc}"
+                "Не удалось проверить канал. Убедитесь, что бот добавлен в канал."
             ) from exc
 
-        # 3. Verify admin rights
+        # 3. Verify admin rights — user must be admin of the channel
         try:
             admin_info = await self._telegram_client.get_chat_member(
                 chat_id=channel_identifier,
@@ -114,17 +114,17 @@ class ChannelBindingService:
             )
         except TelegramClientError as exc:
             raise ExternalServiceError(
-                f"Could not verify admin rights: {exc}"
+                "Не удалось проверить права в канале. Попробуйте позже."
             ) from exc
 
         if not admin_info.is_admin:
             raise AuthorizationError(
-                "You must be an admin of the target channel to bind it"
+                "Вы должны быть администратором канала, чтобы привязать его"
             )
 
         if not admin_info.can_post_messages:
             raise AuthorizationError(
-                "You do not have permission to post messages in the target channel"
+                "У вас нет права публиковать сообщения в этом канале"
             )
 
         # 4. Persist the binding

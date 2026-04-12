@@ -102,7 +102,7 @@ class TextGenerationService:
         # 5. Handle result
         if result.is_failure:
             raise ExternalServiceError(
-                result.error_message or "Text generation failed"
+                "Не удалось сгенерировать текст. Попробуйте позже."
             )
 
         # 6. Apply generated text to draft

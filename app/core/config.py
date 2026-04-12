@@ -72,6 +72,7 @@ class Settings(BaseSettings):
 
     # ── openai ─────────────────────────────────────────────────────
     openai_api_key: SecretStr = Field(default=SecretStr(""))
+    openai_base_url: str = Field(default="")
 
     # ── database (placeholder — activated in PR 04) ────────────────
     database_url: SecretStr = Field(default=SecretStr(""))

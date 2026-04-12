@@ -73,13 +73,17 @@ class OpenAIImageProvider:
         self,
         *,
         api_key: str,
+        base_url: str | None = None,
         model: str = "dall-e-3",
         default_size: str = "1024x1024",
         timeout: float = 60.0,
     ) -> None:
         from openai import AsyncOpenAI
 
-        self._client = AsyncOpenAI(api_key=api_key, timeout=timeout)
+        kwargs: dict = {"api_key": api_key, "timeout": timeout}
+        if base_url:
+            kwargs["base_url"] = base_url
+        self._client = AsyncOpenAI(**kwargs)
         self._model = model
         self._default_size = default_size
 
@@ -103,7 +107,7 @@ class OpenAIImageProvider:
             if not response.data or not response.data[0].url:
                 return GenerationResult.failure(
                     generation_type=GenerationType.IMAGE,
-                    error_message="Provider returned empty image data",
+                    error_message="Провайдер вернул пустые данные изображения",
                     prompt_used=prompt,
                     model_name=self._model,
                 )
@@ -118,9 +122,13 @@ class OpenAIImageProvider:
                 tokens_used=None,
             )
         except Exception as exc:
+            # Log full error for debugging but return safe message
+            import logging
+
+            logging.getLogger(__name__).error("Image generation provider error: %s", exc)
             return GenerationResult.failure(
                 generation_type=GenerationType.IMAGE,
-                error_message=str(exc),
+                error_message="Ошибка генерации изображения. Проверьте конфигурацию провайдера.",
                 prompt_used=prompt,
                 model_name=self._model,
             )

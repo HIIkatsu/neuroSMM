@@ -100,11 +100,11 @@ class ImageGenerationService:
         # 5. Handle result
         if result.is_failure:
             raise ExternalServiceError(
-                result.error_message or "Image generation failed"
+                "Не удалось сгенерировать изображение. Попробуйте позже."
             )
 
         if not result.content:
-            raise ExternalServiceError("Image generation returned empty content")
+            raise ExternalServiceError("Генерация изображения вернула пустой результат")
 
         # 6. Apply generated image to draft
         updated_draft = draft.attach_image(result.content)

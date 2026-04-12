@@ -32,14 +32,10 @@ from app.api.schemas.schedule import (
 from app.core.config import get_settings
 from app.domain.schedule import ScheduledPost
 from app.domain.user import User
-from app.integrations.db.repositories.draft import DraftRepository
-from app.integrations.db.repositories.project import ProjectRepository
-from app.integrations.db.repositories.scheduled_post import ScheduledPostRepository
 from app.integrations.telegram.client import TelegramClient
 from app.publishing.provider import Publisher, StubPublisher
 from app.publishing.telegram import TelegramPublisher
-from app.services.publish import PublishService
-from app.services.schedule import ScheduleService
+from app.services.schedule import ScheduleService, build_schedule_service
 
 router = APIRouter(tags=["scheduling"])
 
@@ -57,12 +53,7 @@ def _get_publisher() -> Publisher:
 def _get_schedule_service(
     session: AsyncSession = Depends(get_db_session),
 ) -> ScheduleService:
-    schedule_repo = ScheduledPostRepository(session)
-    draft_repo = DraftRepository(session)
-    project_repo = ProjectRepository(session)
-    publisher = _get_publisher()
-    publish_svc = PublishService(draft_repo, project_repo, publisher)
-    return ScheduleService(schedule_repo, draft_repo, project_repo, publish_svc)
+    return build_schedule_service(session, _get_publisher())
 
 
 def _to_response(post: ScheduledPost) -> ScheduleResponse:

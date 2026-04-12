@@ -21,12 +21,9 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.core.logging import get_logger
-from app.integrations.db.repositories.draft import DraftRepository
-from app.integrations.db.repositories.project import ProjectRepository
 from app.integrations.db.repositories.scheduled_post import ScheduledPostRepository
 from app.publishing.provider import Publisher
-from app.services.publish import PublishService
-from app.services.schedule import ScheduleService
+from app.services.schedule import build_schedule_service
 
 logger = get_logger(__name__)
 
@@ -134,14 +131,8 @@ class SchedulerRunner:
         """Execute a single scheduled post in an isolated session/transaction."""
         async with self._session_factory() as session:
             try:
-                schedule_repo = ScheduledPostRepository(session)
-                draft_repo = DraftRepository(session)
-                project_repo = ProjectRepository(session)
                 publisher = self._publisher_factory()
-                publish_svc = PublishService(draft_repo, project_repo, publisher)
-                schedule_svc = ScheduleService(
-                    schedule_repo, draft_repo, project_repo, publish_svc
-                )
+                schedule_svc = build_schedule_service(session, publisher)
 
                 await schedule_svc.execute_scheduled_post(schedule_id)
                 await session.commit()

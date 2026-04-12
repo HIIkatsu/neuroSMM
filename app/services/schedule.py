@@ -231,7 +231,10 @@ class ScheduleService:
                 extra={"draft_id": schedule.draft_id, "project_id": schedule.project_id},
             )
         except Exception as exc:
-            reason = getattr(exc, "message", None) or str(exc) or type(exc).__name__
+            msg = getattr(exc, "message", None)
+            if not msg:
+                msg = str(exc) if str(exc) else type(exc).__name__
+            reason = msg
             updated = schedule.mark_failed(reason)
             logger.error(
                 "Scheduled post %d failed: %s",
@@ -249,3 +252,33 @@ class ScheduleService:
         project = await self._project_repo.get_by_id(project_id)
         if project.owner_id != user_id:
             raise AuthorizationError("You do not have access to this project")
+
+
+# ── factory helper ────────────────────────────────────────────────────
+
+
+def build_schedule_service(
+    session: object,
+    publisher: object,
+) -> ScheduleService:
+    """Construct a :class:`ScheduleService` from an async DB session and a publisher.
+
+    Shared by the API route dependency and the scheduler runner to avoid
+    duplicating the service-wiring boilerplate in both places.
+
+    Parameters
+    ----------
+    session:
+        An ``AsyncSession`` instance.
+    publisher:
+        A :class:`~app.publishing.provider.Publisher` implementation.
+    """
+    from sqlalchemy.ext.asyncio import AsyncSession
+
+    assert isinstance(session, AsyncSession)
+
+    draft_repo = DraftRepository(session)
+    project_repo = ProjectRepository(session)
+    schedule_repo = ScheduledPostRepository(session)
+    publish_svc = PublishService(draft_repo, project_repo, publisher)  # type: ignore[arg-type]
+    return ScheduleService(schedule_repo, draft_repo, project_repo, publish_svc)

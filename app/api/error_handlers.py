@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.core.exceptions import ExternalServiceError, NeuroSMMError
 from app.core.logging import get_logger
@@ -37,8 +38,33 @@ def _safe_message(exc: NeuroSMMError) -> str:
     return exc.message
 
 
+class CatchAllMiddleware(BaseHTTPMiddleware):
+    """Middleware that catches truly unhandled exceptions.
+
+    Returns a generic 500 JSON response so that no internal details
+    (tracebacks, library errors, DB connection strings) leak to clients.
+    """
+
+    async def dispatch(self, request: Request, call_next):
+        try:
+            return await call_next(request)
+        except Exception as exc:
+            logger.exception(
+                "Unhandled error on %s: %s",
+                request.url.path,
+                exc,
+            )
+            return JSONResponse(
+                status_code=500,
+                content={"detail": "Внутренняя ошибка сервера. Попробуйте позже."},
+            )
+
+
 def register_exception_handlers(app: FastAPI) -> None:
     """Attach application exception handlers to the FastAPI app."""
+
+    # Middleware for truly unhandled exceptions (must be added first)
+    app.add_middleware(CatchAllMiddleware)
 
     @app.exception_handler(NeuroSMMError)
     async def neurosmm_error_handler(
@@ -54,24 +80,4 @@ def register_exception_handlers(app: FastAPI) -> None:
         return JSONResponse(
             status_code=exc.status_code,
             content={"detail": _safe_message(exc)},
-        )
-
-    @app.exception_handler(Exception)
-    async def unhandled_error_handler(
-        request: Request,
-        exc: Exception,
-    ) -> JSONResponse:
-        """Catch-all for truly unexpected errors.
-
-        Logs the full traceback server-side but returns only a generic
-        message to the client so no internals leak.
-        """
-        logger.exception(
-            "Unhandled error on %s: %s",
-            request.url.path,
-            exc,
-        )
-        return JSONResponse(
-            status_code=500,
-            content={"detail": "Внутренняя ошибка сервера. Попробуйте позже."},
         )

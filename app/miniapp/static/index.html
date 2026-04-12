@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#0d0f1a" />
+  <meta name="color-scheme" content="dark" />
+  <title>NeuroSMM</title>
+
+  <!-- Telegram Mini App SDK -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <!-- Design System -->
+  <link rel="stylesheet" href="/static/css/design-tokens.css" />
+  <link rel="stylesheet" href="/static/css/base.css" />
+  <link rel="stylesheet" href="/static/css/components.css" />
+</head>
+<body>
+  <div id="app">
+    <div class="app-content">
+      <!-- Screens (one active at a time) -->
+      <div class="screen active" id="screen-home">
+        <div class="loading-center">
+          <div class="spinner"></div>
+          <span>Loading…</span>
+        </div>
+      </div>
+      <div class="screen" id="screen-create"></div>
+      <div class="screen" id="screen-plan"></div>
+      <div class="screen" id="screen-stats"></div>
+      <div class="screen" id="screen-channel"></div>
+      <div class="screen" id="screen-settings"></div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav" id="bottom-nav" aria-label="Main navigation"></nav>
+  </div>
+
+  <!-- JS modules (order matters) -->
+  <script src="/static/js/icons.js"></script>
+  <script src="/static/js/api.js"></script>
+  <script src="/static/js/store.js"></script>
+  <script src="/static/js/ui.js"></script>
+  <script src="/static/js/onboarding.js"></script>
+  <script src="/static/js/screen-home.js"></script>
+  <script src="/static/js/screen-create.js"></script>
+  <script src="/static/js/screen-plan.js"></script>
+  <script src="/static/js/screen-stats.js"></script>
+  <script src="/static/js/screen-channel.js"></script>
+  <script src="/static/js/screen-settings.js"></script>
+  <script src="/static/js/app.js"></script>
+</body>
+</html>

@@ -163,6 +163,12 @@
 
 .btn-full { width: 100%; }
 
+.btn:disabled, .btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
 .btn-sm {
   padding: var(--space-sm) var(--space-md);
   font-size: var(--font-size-sm);
@@ -371,7 +377,7 @@ select.input {
 
 .toggle input:checked + .toggle-track::after {
   transform: translateX(20px);
-  background: white;
+  background: var(--text-on-accent);
 }
 
 /* ── Status Badge ─────────────────────────────────────────── */
@@ -392,7 +398,7 @@ select.input {
 .badge-failed { background: rgba(239, 68, 68, 0.2); color: var(--status-failed); }
 .badge-cancelled { background: rgba(107, 114, 128, 0.2); color: var(--status-cancelled); }
 .badge-pending { background: rgba(59, 130, 246, 0.2); color: var(--status-pending); }
-.badge-ready { background: rgba(59, 130, 246, 0.2); color: var(--status-pending); }
+.badge-ready { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
 
 /* ── List Items ───────────────────────────────────────────── */
 .list-item {

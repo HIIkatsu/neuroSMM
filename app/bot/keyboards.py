@@ -32,7 +32,7 @@ def open_miniapp_keyboard(miniapp_url: str) -> InlineKeyboardMarkup:
 def main_menu_keyboard(miniapp_url: str) -> InlineKeyboardMarkup:
     """Return the main quick-action keyboard shown after /start.
 
-    Provides a Mini App launcher plus lightweight navigation shortcuts.
+    Provides a Mini App launcher — all navigation is handled within the SPA.
     """
     return InlineKeyboardMarkup(
         inline_keyboard=[
@@ -41,22 +41,6 @@ def main_menu_keyboard(miniapp_url: str) -> InlineKeyboardMarkup:
                     text="Open NeuroSMM",
                     web_app=WebAppInfo(url=miniapp_url),
                 )
-            ],
-            [
-                InlineKeyboardButton(
-                    text="Projects",
-                    web_app=WebAppInfo(url=f"{miniapp_url}/projects"),
-                ),
-                InlineKeyboardButton(
-                    text="Drafts",
-                    web_app=WebAppInfo(url=f"{miniapp_url}/drafts"),
-                ),
-            ],
-            [
-                InlineKeyboardButton(
-                    text="Schedule",
-                    web_app=WebAppInfo(url=f"{miniapp_url}/schedule"),
-                ),
             ],
         ]
     )

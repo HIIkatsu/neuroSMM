@@ -36,27 +36,18 @@ class TestMainMenuKeyboard:
         assert btn.web_app is not None
         assert btn.web_app.url == _URL
 
-    def test_contains_projects_button(self) -> None:
+    def test_single_row_only(self) -> None:
+        """Main menu is a single launch button — no broken sub-page URLs."""
         kb = main_menu_keyboard(_URL)
-        all_buttons = [btn for row in kb.inline_keyboard for btn in row]
-        labels = [b.text for b in all_buttons]
-        assert "Projects" in labels
+        assert len(kb.inline_keyboard) == 1
 
-    def test_contains_drafts_button(self) -> None:
+    def test_launch_button_label(self) -> None:
         kb = main_menu_keyboard(_URL)
-        all_buttons = [btn for row in kb.inline_keyboard for btn in row]
-        labels = [b.text for b in all_buttons]
-        assert "Drafts" in labels
+        btn = kb.inline_keyboard[0][0]
+        assert btn.text == "Open NeuroSMM"
 
-    def test_contains_schedule_button(self) -> None:
+    def test_launch_button_url_matches(self) -> None:
         kb = main_menu_keyboard(_URL)
-        all_buttons = [btn for row in kb.inline_keyboard for btn in row]
-        labels = [b.text for b in all_buttons]
-        assert "Schedule" in labels
-
-    def test_projects_button_url_contains_miniapp_base(self) -> None:
-        kb = main_menu_keyboard(_URL)
-        all_buttons = [btn for row in kb.inline_keyboard for btn in row]
-        projects_btn = next(b for b in all_buttons if b.text == "Projects")
-        assert projects_btn.web_app is not None
-        assert _URL in projects_btn.web_app.url
+        btn = kb.inline_keyboard[0][0]
+        assert btn.web_app is not None
+        assert btn.web_app.url == _URL

@@ -157,16 +157,18 @@ const ScreenChannel = (() => {
       <button class="btn btn-primary btn-full" id="confirm-bind-btn">Connect</button>
     `;
     const modal = UI.showModal(html, 'Connect channel');
-    modal.querySelector('#confirm-bind-btn').addEventListener('click', async () => {
+    modal.querySelector('#confirm-bind-btn').addEventListener('click', async function() {
       const id = modal.querySelector('#bind-channel-id').value.trim();
       if (!id) { UI.toast('Enter channel identifier', 'error'); return; }
-      try {
-        await API.bindChannel(project.id, { channel_identifier: id });
-        UI.closeModal();
-        UI.toast('Channel connected!', 'success');
-        await _refreshChannelStatus();
-        render();
-      } catch (e) { UI.toast(e.message, 'error'); }
+      await UI.withButtonLoading(this, async () => {
+        try {
+          await API.bindChannel(project.id, { channel_identifier: id });
+          UI.closeModal();
+          UI.toast('Channel connected!', 'success');
+          await _refreshChannelStatus();
+          render();
+        } catch (e) { UI.toast(e.message, 'error'); }
+      }, 'Connecting…');
     });
   }
 
@@ -175,9 +177,18 @@ const ScreenChannel = (() => {
   }
 
   async function refreshStatus() {
-    await _refreshChannelStatus();
-    render();
-    UI.toast('Status refreshed', 'success');
+    const btn = document.querySelector('[onclick="ScreenChannel.refreshStatus()"]');
+    if (btn) {
+      await UI.withButtonLoading(btn, async () => {
+        await _refreshChannelStatus();
+        render();
+        UI.toast('Status refreshed', 'success');
+      }, `${Icons.refresh} Refreshing…`);
+    } else {
+      await _refreshChannelStatus();
+      render();
+      UI.toast('Status refreshed', 'success');
+    }
   }
 
   async function _refreshChannelStatus() {
@@ -207,17 +218,19 @@ const ScreenChannel = (() => {
       <button class="btn btn-primary btn-full" id="save-proj-btn">Save</button>
     `;
     const modal = UI.showModal(html, 'Edit project');
-    modal.querySelector('#save-proj-btn').addEventListener('click', async () => {
+    modal.querySelector('#save-proj-btn').addEventListener('click', async function() {
       const title = modal.querySelector('#edit-proj-title').value.trim();
       const desc = modal.querySelector('#edit-proj-desc').value.trim();
       if (!title) { UI.toast('Title required', 'error'); return; }
-      try {
-        const updated = await API.updateProject(project.id, { title, description: desc });
-        Store.update('projects', (ps) => ps.map(p => p.id === updated.id ? updated : p));
-        UI.closeModal();
-        UI.toast('Project updated', 'success');
-        render();
-      } catch (e) { UI.toast(e.message, 'error'); }
+      await UI.withButtonLoading(this, async () => {
+        try {
+          const updated = await API.updateProject(project.id, { title, description: desc });
+          Store.update('projects', (ps) => ps.map(p => p.id === updated.id ? updated : p));
+          UI.closeModal();
+          UI.toast('Project updated', 'success');
+          render();
+        } catch (e) { UI.toast(e.message, 'error'); }
+      }, 'Saving…');
     });
   }
 
@@ -231,9 +244,20 @@ const ScreenChannel = (() => {
   async function deactivateProject() {
     const project = Store.getActiveProject();
     if (!project) return;
+    const confirmed = await UI.confirm(
+      `Deactivate "${project.title}"? You can reactivate it later.`,
+      'Deactivate'
+    );
+    if (!confirmed) return;
     try {
       const updated = await API.deactivateProject(project.id);
       Store.update('projects', (ps) => ps.map(p => p.id === updated.id ? updated : p));
+      // Switch to another active project if available
+      const activeProjects = Store.get('projects').filter(p => p.is_active && p.id !== updated.id);
+      if (activeProjects.length > 0) {
+        Store.setActiveProject(activeProjects[0].id);
+        await App.loadProjectData();
+      }
       render();
       UI.toast('Project deactivated', 'success');
     } catch (e) { UI.toast(e.message, 'error'); }

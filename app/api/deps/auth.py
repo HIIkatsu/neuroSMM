@@ -70,9 +70,11 @@ async def get_current_user(
 
 async def _resolve_dev_user(repo: UserRepository, user_id: int) -> User:
     """Resolve a user via the dev header (testing only)."""
+    from app.core.exceptions import NotFoundError
+
     try:
         user = await repo.get_by_id(user_id)
-    except Exception:
+    except NotFoundError:
         raise AuthenticationError(f"User with id={user_id} not found")
 
     if not user.is_active:
@@ -97,9 +99,11 @@ async def _resolve_telegram_user(
         raise AuthenticationError(f"Invalid Telegram authentication: {exc}")
 
     # Try to find existing user by telegram_id, or auto-create
+    from app.core.exceptions import NotFoundError
+
     try:
         user = await repo.get_by_telegram_id(tg_data.user_id)
-    except Exception:
+    except NotFoundError:
         # User does not exist — create a new one
         user = User(
             telegram_id=tg_data.user_id,

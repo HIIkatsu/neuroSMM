@@ -105,7 +105,8 @@ class PublishService:
         # 2. Enforce READY state
         if draft.status != DraftStatus.READY:
             raise ConflictError(
-                f"Черновик должен быть в статусе 'ready' для публикации, текущий статус: '{draft.status}'"
+                "Черновик должен быть в статусе 'ready' для публикации,"
+                f" текущий статус: '{draft.status}'"
             )
 
         # 3. Build payload and publish

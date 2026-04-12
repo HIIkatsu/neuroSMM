@@ -102,7 +102,8 @@ class ScheduleService:
 
         if draft.status != DraftStatus.READY:
             raise ConflictError(
-                f"Черновик должен быть в статусе 'ready' для планирования, текущий статус: '{draft.status}'"
+                "Черновик должен быть в статусе 'ready' для планирования,"
+                f" текущий статус: '{draft.status}'"
             )
 
         # 4. Build domain object (validates publish_at timezone + future check)

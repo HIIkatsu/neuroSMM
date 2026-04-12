@@ -170,7 +170,7 @@ class TestTelegramAuth:
             headers={"X-Telegram-Init-Data": init_data},
         )
         assert resp.status_code == 401
-        assert "expired" in resp.json()["detail"].lower() or "Invalid" in resp.json()["detail"]
+        assert "expired" in resp.json()["detail"].lower()
 
     async def test_missing_credentials_returns_401(
         self, prod_client: AsyncClient

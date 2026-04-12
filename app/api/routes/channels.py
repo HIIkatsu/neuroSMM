@@ -28,6 +28,10 @@ def _get_channel_binding_service(
 ) -> ChannelBindingService:
     settings = get_settings()
     bot_token = settings.bot_token.get_secret_value()
+    if not bot_token:
+        from app.core.exceptions import ConfigurationError
+
+        raise ConfigurationError("Telegram bot token is not configured for channel binding")
     telegram_client = TelegramClient(bot_token)
     return ChannelBindingService(
         project_repo=ProjectRepository(session),

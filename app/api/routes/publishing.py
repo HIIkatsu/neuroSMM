@@ -12,10 +12,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps.auth import get_current_user
 from app.api.deps.database import get_db_session
 from app.api.schemas.publishing import PreviewResponse, PublishResponse
+from app.core.config import get_settings
 from app.domain.user import User
 from app.integrations.db.repositories.draft import DraftRepository
 from app.integrations.db.repositories.project import ProjectRepository
-from app.publishing.provider import StubPublisher
+from app.integrations.telegram.client import TelegramClient
+from app.publishing.provider import Publisher, StubPublisher
+from app.publishing.telegram import TelegramPublisher
 from app.services.preview import PreviewService
 from app.services.publish import PublishService
 
@@ -31,13 +34,27 @@ def _get_preview_service(
     return PreviewService(DraftRepository(session), ProjectRepository(session))
 
 
+def _get_publisher() -> Publisher:
+    """Create the appropriate publisher based on configuration.
+
+    Uses :class:`TelegramPublisher` when a bot token is configured,
+    otherwise falls back to :class:`StubPublisher` (dev/test only).
+    """
+    settings = get_settings()
+    bot_token = settings.bot_token.get_secret_value()
+    if bot_token:
+        client = TelegramClient(bot_token)
+        return TelegramPublisher(client)
+    return StubPublisher()
+
+
 def _get_publish_service(
     session: AsyncSession = Depends(get_db_session),
 ) -> PublishService:
     return PublishService(
         DraftRepository(session),
         ProjectRepository(session),
-        StubPublisher(),
+        _get_publisher(),
     )
 
 

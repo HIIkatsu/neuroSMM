@@ -41,9 +41,6 @@ def get_async_engine(
     kwargs: dict[str, object] = {"echo": echo}
 
     if url.startswith("sqlite"):
-        kwargs["pool_size"] = 0
-        kwargs["max_overflow"] = 0
-        kwargs["pool_pre_ping"] = False
         connect_args["check_same_thread"] = False
         kwargs["connect_args"] = connect_args
     else:

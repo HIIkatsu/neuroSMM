@@ -6,6 +6,7 @@ from __future__ import annotations
 
 from app.domain.user import User
 from app.integrations.db.models.user import UserORM
+from app.integrations.db.utils import ensure_utc
 
 
 def user_to_domain(orm: UserORM) -> User:
@@ -18,8 +19,8 @@ def user_to_domain(orm: UserORM) -> User:
         last_name=orm.last_name,
         language_code=orm.language_code,
         is_active=orm.is_active,
-        created_at=orm.created_at,
-        updated_at=orm.updated_at,
+        created_at=ensure_utc(orm.created_at),
+        updated_at=ensure_utc(orm.updated_at),
     )
 
 

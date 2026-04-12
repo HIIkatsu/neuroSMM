@@ -7,6 +7,7 @@ from __future__ import annotations
 from app.domain.enums import ScheduleStatus
 from app.domain.schedule import ScheduledPost
 from app.integrations.db.models.scheduled_post import ScheduledPostORM
+from app.integrations.db.utils import ensure_utc, ensure_utc_optional
 
 
 def scheduled_post_to_domain(orm: ScheduledPostORM) -> ScheduledPost:
@@ -15,12 +16,12 @@ def scheduled_post_to_domain(orm: ScheduledPostORM) -> ScheduledPost:
         id=orm.id,
         draft_id=orm.draft_id,
         project_id=orm.project_id,
-        publish_at=orm.publish_at,
+        publish_at=ensure_utc(orm.publish_at),
         status=ScheduleStatus(orm.status),
         failure_reason=orm.failure_reason,
-        published_at=orm.published_at,
-        created_at=orm.created_at,
-        updated_at=orm.updated_at,
+        published_at=ensure_utc_optional(orm.published_at),
+        created_at=ensure_utc(orm.created_at),
+        updated_at=ensure_utc(orm.updated_at),
     )
 
 

@@ -7,6 +7,7 @@ from __future__ import annotations
 from app.domain.draft import Draft
 from app.domain.enums import ContentType, DraftStatus, Tone
 from app.integrations.db.models.draft import DraftORM
+from app.integrations.db.utils import ensure_utc
 
 
 def draft_to_domain(orm: DraftORM) -> Draft:
@@ -22,8 +23,8 @@ def draft_to_domain(orm: DraftORM) -> Draft:
         tone=Tone(orm.tone),
         topic=orm.topic,
         status=DraftStatus(orm.status),
-        created_at=orm.created_at,
-        updated_at=orm.updated_at,
+        created_at=ensure_utc(orm.created_at),
+        updated_at=ensure_utc(orm.updated_at),
     )
 
 

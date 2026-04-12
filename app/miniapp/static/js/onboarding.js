@@ -1,6 +1,6 @@
 /**
- * NeuroSMM V2 — Onboarding Flow
- * Skippable but useful; collects meaningful setup information.
+ * NeuroSMM V2 — Онбординг
+ * Пропускаемый, но полезный; собирает начальные настройки.
  */
 const Onboarding = (() => {
   let _overlay = null;
@@ -8,40 +8,54 @@ const Onboarding = (() => {
   const _totalSteps = 4;
   let _resolve = null;
 
+  const TONE_LABELS = {
+    neutral: 'Нейтральный',
+    formal: 'Формальный',
+    casual: 'Разговорный',
+    humorous: 'Юмористический',
+    promotional: 'Рекламный',
+  };
+
+  const CONTENT_TYPE_LABELS = {
+    text: 'Текст',
+    image: 'Изображение',
+    text_and_image: 'Текст + изображение',
+  };
+
   const _steps = [
     {
       icon: '✨',
-      title: 'Welcome to NeuroSMM',
-      desc: 'AI-powered content creation and scheduling for your Telegram channel.',
+      title: 'Добро пожаловать в NeuroSMM',
+      desc: 'Создание контента и планирование публикаций для вашего Telegram-канала с помощью ИИ.',
       type: 'welcome',
     },
     {
       icon: '🎯',
-      title: 'Your project',
-      desc: 'Create your first project to organize content for a channel.',
+      title: 'Ваш проект',
+      desc: 'Создайте первый проект для организации контента канала.',
       type: 'project',
       fields: [
-        { id: 'ob-project-title', label: 'Project name', placeholder: 'e.g. My Tech Channel', tag: 'input', required: true },
-        { id: 'ob-project-desc', label: 'Description (optional)', placeholder: 'What is this channel about?', tag: 'textarea' },
+        { id: 'ob-project-title', label: 'Название проекта', placeholder: 'Например: Мой Tech-канал', tag: 'input', required: true },
+        { id: 'ob-project-desc', label: 'Описание (необязательно)', placeholder: 'О чём этот канал?', tag: 'textarea' },
       ],
     },
     {
       icon: '🎨',
-      title: 'Content style',
-      desc: 'Set your default tone and content preferences. You can change these later in Settings.',
+      title: 'Стиль контента',
+      desc: 'Настройте тон и тип контента по умолчанию. Можно изменить позже в настройках.',
       type: 'preferences',
       choices: [
-        { id: 'ob-tone', label: 'Default tone', options: ['neutral', 'formal', 'casual', 'humorous', 'promotional'] },
-        { id: 'ob-content-type', label: 'Default content type', options: ['text', 'image', 'text_and_image'] },
+        { id: 'ob-tone', label: 'Тон по умолчанию', options: ['neutral', 'formal', 'casual', 'humorous', 'promotional'], labels: TONE_LABELS },
+        { id: 'ob-content-type', label: 'Тип контента', options: ['text', 'image', 'text_and_image'], labels: CONTENT_TYPE_LABELS },
       ],
     },
     {
       icon: '📡',
-      title: 'Connect channel',
-      desc: 'Link your Telegram channel to publish content directly. You can skip this and do it later.',
+      title: 'Подключить канал',
+      desc: 'Привяжите Telegram-канал для прямой публикации. Можно сделать это позже.',
       type: 'channel',
       fields: [
-        { id: 'ob-channel-id', label: 'Channel username or ID', placeholder: '@mychannel', tag: 'input' },
+        { id: 'ob-channel-id', label: 'Юзернейм или ID канала', placeholder: '@mychannel', tag: 'input' },
       ],
     },
   ];
@@ -69,10 +83,10 @@ const Onboarding = (() => {
         ${_steps.map((s, i) => _renderStep(s, i)).join('')}
       </div>
       <div class="onboarding-actions">
-        <button class="btn btn-ghost btn-full" id="ob-skip">Skip</button>
+        <button class="btn btn-ghost btn-full" id="ob-skip">Пропустить</button>
         ${_step < _totalSteps - 1
-          ? `<button class="btn btn-primary btn-full" id="ob-next">${_step === 0 ? 'Get started' : 'Continue'}</button>`
-          : `<button class="btn btn-primary btn-full" id="ob-finish">Finish setup</button>`
+          ? `<button class="btn btn-primary btn-full" id="ob-next">${_step === 0 ? 'Начать' : 'Далее'}</button>`
+          : `<button class="btn btn-primary btn-full" id="ob-finish">Завершить настройку</button>`
         }
       </div>
     `;
@@ -105,7 +119,7 @@ const Onboarding = (() => {
         <div class="input-group">
           <label class="input-label" for="${c.id}">${UI.esc(c.label)}</label>
           <select class="input" id="${c.id}">
-            ${c.options.map(o => `<option value="${o}">${o.replace(/_/g, ' ')}</option>`).join('')}
+            ${c.options.map(o => `<option value="${o}">${c.labels ? c.labels[o] : o}</option>`).join('')}
           </select>
         </div>
       `).join('');
@@ -126,7 +140,7 @@ const Onboarding = (() => {
     if (_step === 1) {
       const title = document.getElementById('ob-project-title')?.value?.trim();
       if (!title) {
-        UI.toast('Please enter a project name', 'error');
+        UI.toast('Введите название проекта', 'error');
         return;
       }
     }
@@ -162,20 +176,20 @@ const Onboarding = (() => {
         const project = await API.createProject({ title: projectTitle, description: projectDesc });
         Store.update('projects', (ps) => [...ps, project]);
         Store.setActiveProject(project.id);
-        UI.toast('Project created!', 'success');
+        UI.toast('Проект создан!', 'success');
 
         // Bind channel if provided
         const channelId = document.getElementById('ob-channel-id')?.value?.trim();
         if (channelId) {
           try {
             await API.bindChannel(project.id, { channel_identifier: channelId });
-            UI.toast('Channel connected!', 'success');
+            UI.toast('Канал подключён!', 'success');
           } catch (e) {
-            UI.toast(`Channel binding failed: ${e.message}. You can connect later.`, 'error');
+            UI.toast(`Не удалось привязать канал: ${e.message}`, 'error');
           }
         }
       } catch (e) {
-        UI.toast(`Failed to create project: ${e.message}`, 'error');
+        UI.toast(`Не удалось создать проект: ${e.message}`, 'error');
       }
     }
   }

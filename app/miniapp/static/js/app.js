@@ -147,11 +147,11 @@ const App = (() => {
   function _renderNav() {
     const nav = document.getElementById('bottom-nav');
     const items = [
-      { id: 'home', label: 'Neuro', icon: Icons.neuro },
-      { id: 'create', label: 'Create', icon: Icons.create },
-      { id: 'plan', label: 'Plan', icon: Icons.plan },
-      { id: 'stats', label: 'Stats', icon: Icons.stats },
-      { id: 'channel', label: 'Channel', icon: Icons.channel },
+      { id: 'home', label: 'Нейро', icon: Icons.neuro },
+      { id: 'create', label: 'Создать', icon: Icons.create },
+      { id: 'plan', label: 'План', icon: Icons.plan },
+      { id: 'stats', label: 'Статистика', icon: Icons.stats },
+      { id: 'channel', label: 'Канал', icon: Icons.channel },
     ];
 
     nav.innerHTML = items.map(item => `
@@ -181,9 +181,9 @@ const App = (() => {
     content.innerHTML = `
       <div class="empty-state" style="padding-top:20vh">
         <div class="empty-state-icon">⚠️</div>
-        <div class="empty-state-title">Connection error</div>
+        <div class="empty-state-title">Ошибка подключения</div>
         <div class="empty-state-desc">${UI.esc(message)}</div>
-        <button class="btn btn-primary" onclick="location.reload()">Retry</button>
+        <button class="btn btn-primary" onclick="location.reload()">Повторить</button>
       </div>
     `;
   }

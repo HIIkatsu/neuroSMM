@@ -1,9 +1,23 @@
 /**
  * NeuroSMM V2 Mini App — API Client
  * Wraps all backend endpoints with proper auth headers.
+ * Sanitizes error messages so raw provider/internal errors never reach the UI.
  */
 const API = (() => {
   const BASE = '/api/v1';
+
+  /** Map of common HTTP status codes to user-friendly Russian messages */
+  const _STATUS_MESSAGES = {
+    401: 'Необходима авторизация',
+    403: 'Доступ запрещён',
+    404: 'Не найдено',
+    409: 'Конфликт данных',
+    422: 'Некорректные данные',
+    429: 'Слишком много запросов. Подождите немного.',
+    500: 'Внутренняя ошибка сервера',
+    502: 'Внешний сервис временно недоступен',
+    503: 'Сервис временно недоступен',
+  };
 
   function _headers() {
     const h = { 'Content-Type': 'application/json' };
@@ -19,6 +33,23 @@ const API = (() => {
     return h;
   }
 
+  /**
+   * Sanitize an error detail string.
+   * If it looks like a raw provider error (contains API key patterns,
+   * tracebacks, or is unreasonably long), replace it with a generic message.
+   */
+  function _sanitizeError(detail, status) {
+    if (!detail || typeof detail !== 'string') {
+      return _STATUS_MESSAGES[status] || 'Произошла ошибка';
+    }
+    // Detect raw provider leaks (API keys, tracebacks, HTTP urls, long errors)
+    const leaked = /api[_-]?key|sk-|org-|traceback|Traceback|openai\.|httpx\.|Error:|Exception/i;
+    if (leaked.test(detail) || detail.length > 300) {
+      return _STATUS_MESSAGES[status] || 'Произошла ошибка';
+    }
+    return detail;
+  }
+
   async function _request(method, path, body) {
     const opts = { method, headers: _headers() };
     if (body !== undefined) {
@@ -26,8 +57,9 @@ const API = (() => {
     }
     const res = await fetch(`${BASE}${path}`, opts);
     if (!res.ok) {
-      const err = await res.json().catch(() => ({ detail: res.statusText }));
-      throw new Error(err.detail || `HTTP ${res.status}`);
+      const err = await res.json().catch(() => ({}));
+      const rawDetail = err.detail || '';
+      throw new Error(_sanitizeError(rawDetail, res.status));
     }
     if (res.status === 204) return null;
     return res.json();

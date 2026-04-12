@@ -15,14 +15,26 @@ from __future__ import annotations
 
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.api.error_handlers import register_exception_handlers
-from app.api.routes import channels, drafts, generation, health, miniapp, projects, publishing, scheduling
+from app.api.routes import (
+    channels,
+    drafts,
+    generation,
+    health,
+    miniapp,
+    projects,
+    publishing,
+    scheduling,
+)
 from app.core.config import Settings, get_settings
 from app.core.constants import APP_NAME, APP_VERSION
 from app.core.logging import get_logger, setup_logging
@@ -153,6 +165,17 @@ def create_app(
                 await runner.stop()
 
         application.router.lifespan_context = _lifespan
+
+    # ── Mini App static files ─────────────────────────────────
+    _miniapp_dir = Path(__file__).resolve().parent.parent / "miniapp" / "static"
+    if _miniapp_dir.is_dir():
+        application.mount("/static", StaticFiles(directory=str(_miniapp_dir)), name="static")
+
+        _index_html = _miniapp_dir / "index.html"
+
+        @application.get("/", include_in_schema=False)
+        async def _serve_miniapp() -> FileResponse:
+            return FileResponse(str(_index_html), media_type="text/html")
 
     logger.info(
         "FastAPI application created",

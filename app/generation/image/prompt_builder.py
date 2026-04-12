@@ -19,7 +19,7 @@ _TONE_VISUAL: dict[Tone, str] = {
     Tone.NEUTRAL: "Clean, balanced composition with a professional look.",
     Tone.FORMAL: "Polished, corporate-style imagery with a professional aesthetic.",
     Tone.CASUAL: "Relaxed, approachable visual style with warm tones.",
-    Tone.HUMOROUS: "Playful, lighthearted visual style with bright colours.",
+    Tone.HUMOROUS: "Playful, lighthearted visual style with bright colors.",
     Tone.PROMOTIONAL: "Eye-catching, vibrant promotional visual that grabs attention.",
 }
 

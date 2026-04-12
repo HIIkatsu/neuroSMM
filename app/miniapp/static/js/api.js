@@ -33,6 +33,9 @@ const API = (() => {
     return h;
   }
 
+  /** Pattern to detect raw provider/internal error leaks */
+  const _LEAKED_ERROR_PATTERN = /api[_-]?key|sk-|org-|traceback|Traceback|openai\.|httpx\.|Error:|Exception/i;
+
   /**
    * Sanitize an error detail string.
    * If it looks like a raw provider error (contains API key patterns,
@@ -42,9 +45,7 @@ const API = (() => {
     if (!detail || typeof detail !== 'string') {
       return _STATUS_MESSAGES[status] || 'Произошла ошибка';
     }
-    // Detect raw provider leaks (API keys, tracebacks, HTTP urls, long errors)
-    const leaked = /api[_-]?key|sk-|org-|traceback|Traceback|openai\.|httpx\.|Error:|Exception/i;
-    if (leaked.test(detail) || detail.length > 300) {
+    if (_LEAKED_ERROR_PATTERN.test(detail) || detail.length > 300) {
       return _STATUS_MESSAGES[status] || 'Произошла ошибка';
     }
     return detail;

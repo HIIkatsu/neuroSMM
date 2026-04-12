@@ -122,14 +122,10 @@ class DraftService:
         draft = await self._draft_repo.get_by_id(draft_id)
         await self._verify_project_access(draft.project_id, user_id)
 
-        updates: dict[str, object] = {"updated_at": datetime.now(UTC)}
-        if title is not None:
-            updates["title"] = title.strip()
         if text_content is not None:
             draft = draft.update_text(text_content)
         if topic is not None:
             draft = draft.update_topic(topic)
-
         if title is not None:
             draft = draft.model_copy(
                 update={"title": title.strip(), "updated_at": datetime.now(UTC)}

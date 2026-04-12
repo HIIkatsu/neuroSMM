@@ -20,7 +20,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.api.error_handlers import register_exception_handlers
-from app.api.routes import drafts, generation, health, projects
+from app.api.routes import drafts, generation, health, projects, publishing
 from app.core.config import Settings, get_settings
 from app.core.constants import APP_NAME, APP_VERSION
 from app.core.logging import get_logger, setup_logging
@@ -101,6 +101,7 @@ def create_app(
     application.include_router(projects.router, prefix=api_prefix)
     application.include_router(drafts.router, prefix=api_prefix)
     application.include_router(generation.router, prefix=api_prefix)
+    application.include_router(publishing.router, prefix=api_prefix)
 
     logger.info(
         "FastAPI application created",

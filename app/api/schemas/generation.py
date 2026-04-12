@@ -44,3 +44,14 @@ class GenerateTextResponse(BaseModel):
     draft_id: int
     draft_text_content: str
     generation: GenerationResultResponse
+
+
+class GenerateImageResponse(BaseModel):
+    """Response schema for the generate-image endpoint.
+
+    Contains both the updated draft image URL and the generation result metadata.
+    """
+
+    draft_id: int
+    draft_image_url: str | None
+    generation: GenerationResultResponse

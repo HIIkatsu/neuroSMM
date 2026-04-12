@@ -71,3 +71,4 @@ logs/
 secrets/
 *.pem
 *.key
+*.db

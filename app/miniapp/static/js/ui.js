@@ -14,6 +14,8 @@ const UI = (() => {
     return _toastContainer;
   }
 
+  const TOAST_AUTO_DISMISS_MS = 3000;
+
   function toast(message, type = 'info') {
     const container = _ensureToastContainer();
     const el = document.createElement('div');
@@ -25,7 +27,7 @@ const UI = (() => {
       el.style.transform = 'translateY(-16px)';
       el.style.transition = 'all 300ms ease';
       setTimeout(() => el.remove(), 300);
-    }, 3000);
+    }, TOAST_AUTO_DISMISS_MS);
   }
 
   // ── Modal ─────────────────────────────────────────────────

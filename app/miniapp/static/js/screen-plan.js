@@ -94,6 +94,8 @@ const ScreenPlan = (() => {
     const days = [];
     const d = new Date(centerDate);
     const dayOfWeek = d.getDay();
+  // Days-since-Monday offset: JS getDay() returns 0=Sun,1=Mon,...,6=Sat.
+    // (dayOfWeek + 6) % 7 converts to 0=Mon,...,6=Sun.
     const monday = new Date(d);
     monday.setDate(d.getDate() - ((dayOfWeek + 6) % 7));
 
@@ -251,8 +253,13 @@ const ScreenPlan = (() => {
       const [h, m] = timeStr.split(':').map(Number);
       defaultTime = new Date(_selectedDate);
       defaultTime.setHours(h, m, 0, 0);
+      // If the selected date+time is in the past, use the next available slot from now
       if (defaultTime < now) {
-        defaultTime.setDate(defaultTime.getDate() + 1);
+        defaultTime = new Date(now);
+        defaultTime.setHours(h, m, 0, 0);
+        if (defaultTime < now) {
+          defaultTime.setDate(defaultTime.getDate() + 1);
+        }
       }
     } else {
       defaultTime = new Date(now);

@@ -174,6 +174,7 @@ const Onboarding = (() => {
           }
         }
 
+    // Success toast for project (channel binding failure already shown separately above)
         UI.toast('Project created!', 'success');
       } catch (e) {
         UI.toast(`Failed to create project: ${e.message}`, 'error');

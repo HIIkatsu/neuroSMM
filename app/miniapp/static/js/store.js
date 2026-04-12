@@ -61,6 +61,7 @@ const Store = (() => {
         Object.assign(_state.preferences, JSON.parse(saved));
       }
       _state.onboardingComplete = localStorage.getItem('neurosmm_onboarded') === '1';
+      // Project IDs from the backend are always positive integers (>= 1)
       _state.activeProjectId = parseInt(localStorage.getItem('neurosmm_active_project') || '0', 10) || null;
     } catch { /* ignore */ }
   }

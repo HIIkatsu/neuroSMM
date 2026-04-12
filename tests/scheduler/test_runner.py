@@ -2,16 +2,12 @@
 
 from __future__ import annotations
 
-import asyncio
 from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
-
-import pytest
 
 from app.domain.enums import ScheduleStatus
 from app.domain.schedule import ScheduledPost
 from app.scheduler.runner import SchedulerRunner
-
 
 # ── helpers ──────────────────────────────────────────────────────────
 

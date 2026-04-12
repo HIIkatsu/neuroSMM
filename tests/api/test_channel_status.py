@@ -8,8 +8,6 @@ from __future__ import annotations
 
 from httpx import AsyncClient
 
-from app.domain.user import User
-
 
 async def _create_project(
     client: AsyncClient, headers: dict[str, str], title: str = "Test Project"

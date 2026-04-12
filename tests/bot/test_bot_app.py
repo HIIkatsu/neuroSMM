@@ -50,7 +50,6 @@ class TestMiniAppUrlConfig:
 
     def test_miniapp_url_env_var(self, monkeypatch: pytest.MonkeyPatch) -> None:
         monkeypatch.setenv("MINIAPP_URL", "https://example.com/app")
-        from pydantic_settings import BaseSettings
 
         s = Settings(_env_file=None)  # type: ignore[call-arg]
         assert s.miniapp_url == "https://example.com/app"

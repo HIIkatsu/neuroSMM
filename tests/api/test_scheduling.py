@@ -6,9 +6,6 @@ from datetime import UTC, datetime, timedelta
 
 from httpx import AsyncClient
 
-from app.domain.user import User
-
-
 # ── helpers ──────────────────────────────────────────────────────────
 
 

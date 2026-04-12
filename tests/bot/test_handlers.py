@@ -11,9 +11,7 @@ This approach avoids standing up a real bot or a full aiogram event loop.
 from __future__ import annotations
 
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock
-
-import pytest
+from unittest.mock import AsyncMock
 
 from app.bot.handlers.help import build_help_router
 from app.bot.handlers.start import build_start_router

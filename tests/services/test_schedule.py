@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -15,7 +15,6 @@ from app.domain.schedule import ScheduledPost
 from app.publishing.provider import PublishResult
 from app.services.publish import PublishService
 from app.services.schedule import ScheduleService
-
 
 # ── helpers ──────────────────────────────────────────────────────────
 

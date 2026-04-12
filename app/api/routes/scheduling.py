@@ -26,6 +26,7 @@ from app.api.deps.auth import get_current_user
 from app.api.deps.database import get_db_session
 from app.api.schemas.schedule import (
     ScheduleCreateRequest,
+    ScheduleListResponse,
     ScheduleResponse,
     ScheduleRetryRequest,
 )
@@ -97,18 +98,19 @@ async def create_schedule(
 
 @router.get(
     "/projects/{project_id}/schedules",
-    response_model=list[ScheduleResponse],
+    response_model=ScheduleListResponse,
     summary="List all scheduled posts for a project",
 )
 async def list_schedules(
     project_id: int,
     user: User = Depends(get_current_user),
     service: ScheduleService = Depends(_get_schedule_service),
-) -> list[ScheduleResponse]:
+) -> ScheduleListResponse:
     """Return all scheduled posts for the given project."""
     assert user.id is not None
     posts = await service.list_by_project(project_id=project_id, user_id=user.id)
-    return [_to_response(p) for p in posts]
+    items = [_to_response(p) for p in posts]
+    return ScheduleListResponse(items=items, count=len(items))
 
 
 @router.post(

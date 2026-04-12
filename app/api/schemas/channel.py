@@ -25,3 +25,17 @@ class ChannelBindResponse(BaseModel):
     project_id: int = Field(..., description="ID of the project that was bound")
     channel_id: str = Field(..., description="Telegram chat ID that was bound")
     channel_title: str = Field(..., description="Title of the bound channel")
+
+
+class ChannelStatusResponse(BaseModel):
+    """Response schema for channel binding status.
+
+    Used by the Mini App to check whether a project has a bound channel
+    and retrieve the bound channel identifier.
+    """
+
+    project_id: int = Field(..., description="ID of the project")
+    is_bound: bool = Field(..., description="Whether a channel is currently bound")
+    channel_id: str | None = Field(
+        None, description="Telegram chat ID if bound, else null"
+    )

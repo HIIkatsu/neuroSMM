@@ -231,9 +231,10 @@ class TestListSchedules:
 
         assert resp.status_code == 200
         data = resp.json()
-        assert isinstance(data, list)
-        assert len(data) == 1
-        assert data[0]["draft_id"] == draft_id
+        assert "items" in data
+        assert "count" in data
+        assert data["count"] == 1
+        assert data["items"][0]["draft_id"] == draft_id
 
     async def test_list_schedules_empty_project(
         self, client: AsyncClient, auth_headers: dict[str, str]
@@ -246,7 +247,9 @@ class TestListSchedules:
         )
 
         assert resp.status_code == 200
-        assert resp.json() == []
+        data = resp.json()
+        assert data["items"] == []
+        assert data["count"] == 0
 
     async def test_list_schedules_ownership_enforced(
         self,

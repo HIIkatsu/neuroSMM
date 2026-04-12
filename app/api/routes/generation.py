@@ -1,6 +1,6 @@
-"""Text generation API route.
+"""Text and image generation API routes.
 
-Thin router — all business logic lives in :class:`TextGenerationService`.
+Thin routers — all business logic lives in the corresponding service classes.
 """
 
 from __future__ import annotations
@@ -11,16 +11,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps.auth import get_current_user
 from app.api.deps.database import get_db_session
 from app.api.schemas.generation import (
+    GenerateImageResponse,
     GenerateTextRequest,
     GenerateTextResponse,
     GenerationResultResponse,
 )
 from app.core.config import Settings, get_settings
 from app.domain.user import User
+from app.generation.image.provider import OpenAIImageProvider, StubImageProvider
 from app.generation.text.provider import OpenAITextProvider, StubTextProvider
 from app.integrations.db.repositories.draft import DraftRepository
 from app.integrations.db.repositories.project import ProjectRepository
 from app.services.generation import TextGenerationService
+from app.services.image_generation import ImageGenerationService
 
 router = APIRouter(
     prefix="/projects/{project_id}/drafts/{draft_id}/generate",
@@ -28,7 +31,7 @@ router = APIRouter(
 )
 
 
-def _get_generation_service(
+def _get_text_generation_service(
     session: AsyncSession = Depends(get_db_session),
     settings: Settings = Depends(get_settings),
 ) -> TextGenerationService:
@@ -44,6 +47,22 @@ def _get_generation_service(
     return TextGenerationService(draft_repo, project_repo, provider)
 
 
+def _get_image_generation_service(
+    session: AsyncSession = Depends(get_db_session),
+    settings: Settings = Depends(get_settings),
+) -> ImageGenerationService:
+    draft_repo = DraftRepository(session)
+    project_repo = ProjectRepository(session)
+
+    api_key = settings.openai_api_key.get_secret_value()
+    if api_key:
+        provider = OpenAIImageProvider(api_key=api_key)
+    else:
+        provider = StubImageProvider()  # type: ignore[assignment]
+
+    return ImageGenerationService(draft_repo, project_repo, provider)
+
+
 @router.post(
     "/text",
     response_model=GenerateTextResponse,
@@ -54,7 +73,7 @@ async def generate_text(
     draft_id: int,
     body: GenerateTextRequest | None = None,
     user: User = Depends(get_current_user),
-    service: TextGenerationService = Depends(_get_generation_service),
+    service: TextGenerationService = Depends(_get_text_generation_service),
 ) -> GenerateTextResponse:
     """Generate text content for an existing draft.
 
@@ -75,6 +94,46 @@ async def generate_text(
     return GenerateTextResponse(
         draft_id=updated_draft.id,  # type: ignore[arg-type]
         draft_text_content=updated_draft.text_content,
+        generation=GenerationResultResponse(
+            generation_type=result.generation_type,
+            status=result.status,
+            content=result.content,
+            prompt_used=result.prompt_used,
+            model_name=result.model_name,
+            tokens_used=result.tokens_used,
+            created_at=result.created_at,
+        ),
+    )
+
+
+@router.post(
+    "/image",
+    response_model=GenerateImageResponse,
+    summary="Generate image for a draft",
+)
+async def generate_image(
+    project_id: int,
+    draft_id: int,
+    user: User = Depends(get_current_user),
+    service: ImageGenerationService = Depends(_get_image_generation_service),
+) -> GenerateImageResponse:
+    """Generate an image for an existing draft.
+
+    Uses the draft's title, topic, tone, content type, and text to build a prompt.
+    The generated image URL is attached to the draft's image_url field.
+
+    Project ownership is enforced through the service layer.
+    """
+    assert user.id is not None
+
+    updated_draft, result = await service.generate_image_for_draft(
+        draft_id=draft_id,
+        user_id=user.id,
+    )
+
+    return GenerateImageResponse(
+        draft_id=updated_draft.id,  # type: ignore[arg-type]
+        draft_image_url=updated_draft.image_url,
         generation=GenerationResultResponse(
             generation_type=result.generation_type,
             status=result.status,

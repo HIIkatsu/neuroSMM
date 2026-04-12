@@ -177,10 +177,14 @@ const ScreenPlan = (() => {
     if (schedule.status === 'pending') {
       actions = `<button class="btn btn-danger btn-full" id="cancel-schedule-btn">Cancel schedule</button>`;
     } else if (schedule.status === 'failed') {
+      const retryDefault = new Date();
+      retryDefault.setHours(retryDefault.getHours() + 1);
+      retryDefault.setMinutes(0, 0, 0);
+      const retryTimeValue = retryDefault.toISOString().slice(0, 16);
       actions = `
         <div class="input-group">
           <label class="input-label" for="retry-time">New time (UTC)</label>
-          <input class="input" type="datetime-local" id="retry-time" />
+          <input class="input" type="datetime-local" id="retry-time" value="${retryTimeValue}" />
         </div>
         <button class="btn btn-primary btn-full" id="retry-schedule-btn">${Icons.refresh} Retry</button>
       `;
@@ -209,28 +213,36 @@ const ScreenPlan = (() => {
 
     const modal = UI.showModal(html, 'Scheduled post');
 
-    modal.querySelector('#cancel-schedule-btn')?.addEventListener('click', async () => {
-      try {
-        await API.cancelSchedule(project.id, scheduleId);
-        UI.closeModal();
-        UI.toast('Schedule cancelled', 'success');
-        await App.loadProjectData();
-        render();
-      } catch (e) { UI.toast(e.message, 'error'); }
+    modal.querySelector('#cancel-schedule-btn')?.addEventListener('click', async function() {
+      const confirmed = await UI.confirm('Cancel this scheduled post?', 'Cancel schedule');
+      if (!confirmed) return;
+      await UI.withButtonLoading(this, async () => {
+        try {
+          await API.cancelSchedule(project.id, scheduleId);
+          UI.closeModal();
+          UI.toast('Schedule cancelled', 'success');
+          await App.loadProjectData();
+          render();
+        } catch (e) { UI.toast(e.message, 'error'); }
+      }, 'Cancelling…');
     });
 
-    modal.querySelector('#retry-schedule-btn')?.addEventListener('click', async () => {
+    modal.querySelector('#retry-schedule-btn')?.addEventListener('click', async function() {
       const val = modal.querySelector('#retry-time').value;
       if (!val) { UI.toast('Pick a time', 'error'); return; }
-      try {
-        await API.retrySchedule(project.id, scheduleId, {
-          new_publish_at: new Date(val).toISOString(),
-        });
-        UI.closeModal();
-        UI.toast('Schedule retried', 'success');
-        await App.loadProjectData();
-        render();
-      } catch (e) { UI.toast(e.message, 'error'); }
+      const selectedTime = new Date(val);
+      if (selectedTime <= new Date()) { UI.toast('Retry time must be in the future', 'error'); return; }
+      await UI.withButtonLoading(this, async () => {
+        try {
+          await API.retrySchedule(project.id, scheduleId, {
+            new_publish_at: selectedTime.toISOString(),
+          });
+          UI.closeModal();
+          UI.toast('Schedule retried', 'success');
+          await App.loadProjectData();
+          render();
+        } catch (e) { UI.toast(e.message, 'error'); }
+      }, 'Retrying…');
     });
   }
 
@@ -282,17 +294,21 @@ const ScreenPlan = (() => {
     `;
 
     const modal = UI.showModal(html, 'Schedule a post');
-    modal.querySelector('#confirm-add-schedule').addEventListener('click', async () => {
+    modal.querySelector('#confirm-add-schedule').addEventListener('click', async function() {
       const draftId = parseInt(modal.querySelector('#sched-draft').value, 10);
       const val = modal.querySelector('#sched-time').value;
       if (!val) { UI.toast('Pick a time', 'error'); return; }
-      try {
-        await API.scheduleDraft(project.id, draftId, { publish_at: new Date(val).toISOString() });
-        UI.closeModal();
-        UI.toast('Post scheduled!', 'success');
-        await App.loadProjectData();
-        render();
-      } catch (e) { UI.toast(e.message, 'error'); }
+      const selectedTime = new Date(val);
+      if (selectedTime <= new Date()) { UI.toast('Schedule time must be in the future', 'error'); return; }
+      await UI.withButtonLoading(this, async () => {
+        try {
+          await API.scheduleDraft(project.id, draftId, { publish_at: selectedTime.toISOString() });
+          UI.closeModal();
+          UI.toast('Post scheduled!', 'success');
+          await App.loadProjectData();
+          render();
+        } catch (e) { UI.toast(e.message, 'error'); }
+      }, 'Scheduling…');
     });
   }
 

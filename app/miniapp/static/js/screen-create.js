@@ -188,74 +188,89 @@ const ScreenCreate = (() => {
   function _attachEvents(draft, project) {
     const pid = project.id;
 
-    document.getElementById('save-draft-btn')?.addEventListener('click', async () => {
-      try {
-        const updated = await API.updateDraft(pid, draft.id, {
-          title: document.getElementById('draft-title').value.trim(),
-          text_content: document.getElementById('draft-text').value,
-          topic: document.getElementById('draft-topic').value.trim(),
-        });
-        _updateDraftInStore(updated);
-        UI.toast('Draft saved', 'success');
-      } catch (e) { UI.toast(e.message, 'error'); }
+    document.getElementById('save-draft-btn')?.addEventListener('click', async function() {
+      await UI.withButtonLoading(this, async () => {
+        try {
+          const updated = await API.updateDraft(pid, draft.id, {
+            title: document.getElementById('draft-title').value.trim(),
+            text_content: document.getElementById('draft-text').value,
+            topic: document.getElementById('draft-topic').value.trim(),
+          });
+          _updateDraftInStore(updated);
+          UI.toast('Draft saved', 'success');
+        } catch (e) { UI.toast(e.message, 'error'); }
+      }, 'Saving…');
     });
 
-    document.getElementById('gen-text-btn')?.addEventListener('click', async () => {
-      try {
-        UI.toast('Generating text…', 'info');
-        const result = await API.generateText(pid, draft.id);
-        _updateDraftInStorePartial(draft.id, { text_content: result.draft_text_content });
-        _renderEditor();
-        UI.toast('Text generated!', 'success');
-      } catch (e) { UI.toast(e.message, 'error'); }
-    });
-
-    document.getElementById('gen-image-btn')?.addEventListener('click', async () => {
-      try {
-        UI.toast('Generating image…', 'info');
-        const result = await API.generateImage(pid, draft.id);
-        _updateDraftInStorePartial(draft.id, { image_url: result.draft_image_url });
-        _renderEditor();
-        UI.toast('Image generated!', 'success');
-      } catch (e) { UI.toast(e.message, 'error'); }
-    });
-
-    document.getElementById('mark-ready-btn')?.addEventListener('click', async () => {
-      // Auto-save first
-      try {
-        const updated = await API.updateDraft(pid, draft.id, {
-          title: document.getElementById('draft-title')?.value?.trim(),
-          text_content: document.getElementById('draft-text')?.value,
-          topic: document.getElementById('draft-topic')?.value?.trim(),
-        });
-        _updateDraftInStore(updated);
-        const ready = await API.markReady(pid, draft.id);
-        _updateDraftInStore(ready);
-        _renderEditor();
-        UI.toast('Draft marked as ready', 'success');
-      } catch (e) { UI.toast(e.message, 'error'); }
-    });
-
-    document.getElementById('back-to-draft-btn')?.addEventListener('click', async () => {
-      try {
-        const d = await API.backToDraft(pid, draft.id);
-        _updateDraftInStore(d);
-        _renderEditor();
-      } catch (e) { UI.toast(e.message, 'error'); }
-    });
-
-    document.getElementById('publish-btn')?.addEventListener('click', async () => {
-      try {
-        UI.toast('Publishing…', 'info');
-        const result = await API.publishDraft(pid, draft.id);
-        if (result.published) {
-          _updateDraftInStorePartial(draft.id, { status: result.status });
+    document.getElementById('gen-text-btn')?.addEventListener('click', async function() {
+      await UI.withButtonLoading(this, async () => {
+        try {
+          const result = await API.generateText(pid, draft.id);
+          _updateDraftInStorePartial(draft.id, { text_content: result.draft_text_content });
           _renderEditor();
-          UI.toast('Published successfully!', 'success');
-        } else {
-          UI.toast('Publish returned without confirmation', 'error');
-        }
-      } catch (e) { UI.toast(e.message, 'error'); }
+          UI.toast('Text generated!', 'success');
+        } catch (e) { UI.toast(e.message, 'error'); }
+      }, 'Generating…');
+    });
+
+    document.getElementById('gen-image-btn')?.addEventListener('click', async function() {
+      await UI.withButtonLoading(this, async () => {
+        try {
+          const result = await API.generateImage(pid, draft.id);
+          _updateDraftInStorePartial(draft.id, { image_url: result.draft_image_url });
+          _renderEditor();
+          UI.toast('Image generated!', 'success');
+        } catch (e) { UI.toast(e.message, 'error'); }
+      }, 'Generating…');
+    });
+
+    document.getElementById('mark-ready-btn')?.addEventListener('click', async function() {
+      // Client-side validation: must have some content
+      const textVal = document.getElementById('draft-text')?.value?.trim();
+      if (!textVal && !draft.image_url) {
+        UI.toast('Add text or image content before marking ready', 'error');
+        return;
+      }
+      await UI.withButtonLoading(this, async () => {
+        try {
+          // Auto-save first
+          const updated = await API.updateDraft(pid, draft.id, {
+            title: document.getElementById('draft-title')?.value?.trim(),
+            text_content: document.getElementById('draft-text')?.value,
+            topic: document.getElementById('draft-topic')?.value?.trim(),
+          });
+          _updateDraftInStore(updated);
+          const ready = await API.markReady(pid, draft.id);
+          _updateDraftInStore(ready);
+          _renderEditor();
+          UI.toast('Draft marked as ready', 'success');
+        } catch (e) { UI.toast(e.message, 'error'); }
+      }, 'Saving…');
+    });
+
+    document.getElementById('back-to-draft-btn')?.addEventListener('click', async function() {
+      await UI.withButtonLoading(this, async () => {
+        try {
+          const d = await API.backToDraft(pid, draft.id);
+          _updateDraftInStore(d);
+          _renderEditor();
+        } catch (e) { UI.toast(e.message, 'error'); }
+      }, 'Updating…');
+    });
+
+    document.getElementById('publish-btn')?.addEventListener('click', async function() {
+      await UI.withButtonLoading(this, async () => {
+        try {
+          const result = await API.publishDraft(pid, draft.id);
+          if (result.published) {
+            _updateDraftInStorePartial(draft.id, { status: result.status });
+            _renderEditor();
+            UI.toast('Published successfully!', 'success');
+          } else {
+            UI.toast('Publish returned without confirmation', 'error');
+          }
+        } catch (e) { UI.toast(e.message, 'error'); }
+      }, 'Publishing…');
     });
 
     document.getElementById('schedule-btn')?.addEventListener('click', () => {
@@ -263,14 +278,18 @@ const ScreenCreate = (() => {
     });
 
     const archiveBtn = document.getElementById('archive-btn') || document.getElementById('archive-ready-btn');
-    archiveBtn?.addEventListener('click', async () => {
-      try {
-        const d = await API.archiveDraft(pid, draft.id);
-        _updateDraftInStore(d);
-        _mode = 'list';
-        _renderList();
-        UI.toast('Draft archived', 'success');
-      } catch (e) { UI.toast(e.message, 'error'); }
+    archiveBtn?.addEventListener('click', async function() {
+      const confirmed = await UI.confirm('Archive this draft? This action cannot be undone.', 'Archive');
+      if (!confirmed) return;
+      await UI.withButtonLoading(this, async () => {
+        try {
+          const d = await API.archiveDraft(pid, draft.id);
+          _updateDraftInStore(d);
+          _mode = 'list';
+          _renderList();
+          UI.toast('Draft archived', 'success');
+        } catch (e) { UI.toast(e.message, 'error'); }
+      }, 'Archiving…');
     });
   }
 
@@ -288,17 +307,21 @@ const ScreenCreate = (() => {
       <button class="btn btn-primary btn-full" id="confirm-schedule-btn">${Icons.clock} Schedule</button>
     `;
     const modal = UI.showModal(html, 'Schedule post');
-    modal.querySelector('#confirm-schedule-btn').addEventListener('click', async () => {
+    modal.querySelector('#confirm-schedule-btn').addEventListener('click', async function() {
       const val = modal.querySelector('#schedule-time').value;
       if (!val) { UI.toast('Pick a time', 'error'); return; }
-      try {
-        const isoTime = new Date(val).toISOString();
-        await API.scheduleDraft(pid, did, { publish_at: isoTime });
-        UI.closeModal();
-        UI.toast('Post scheduled!', 'success');
-        await App.loadProjectData();
-        _renderEditor();
-      } catch (e) { UI.toast(e.message, 'error'); }
+      const selectedTime = new Date(val);
+      if (selectedTime <= new Date()) { UI.toast('Schedule time must be in the future', 'error'); return; }
+      await UI.withButtonLoading(this, async () => {
+        try {
+          const isoTime = selectedTime.toISOString();
+          await API.scheduleDraft(pid, did, { publish_at: isoTime });
+          UI.closeModal();
+          UI.toast('Post scheduled!', 'success');
+          await App.loadProjectData();
+          _renderEditor();
+        } catch (e) { UI.toast(e.message, 'error'); }
+      }, 'Scheduling…');
     });
   }
 

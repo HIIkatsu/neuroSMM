@@ -162,6 +162,7 @@ const Onboarding = (() => {
         const project = await API.createProject({ title: projectTitle, description: projectDesc });
         Store.update('projects', (ps) => [...ps, project]);
         Store.setActiveProject(project.id);
+        UI.toast('Project created!', 'success');
 
         // Bind channel if provided
         const channelId = document.getElementById('ob-channel-id')?.value?.trim();
@@ -170,12 +171,9 @@ const Onboarding = (() => {
             await API.bindChannel(project.id, { channel_identifier: channelId });
             UI.toast('Channel connected!', 'success');
           } catch (e) {
-            UI.toast(`Channel binding failed: ${e.message}`, 'error');
+            UI.toast(`Channel binding failed: ${e.message}. You can connect later.`, 'error');
           }
         }
-
-    // Success toast for project (channel binding failure already shown separately above)
-        UI.toast('Project created!', 'success');
       } catch (e) {
         UI.toast(`Failed to create project: ${e.message}`, 'error');
       }

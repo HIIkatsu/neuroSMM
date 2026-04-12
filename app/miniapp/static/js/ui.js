@@ -69,7 +69,13 @@ const UI = (() => {
   function formatDate(isoStr) {
     if (!isoStr) return '—';
     const d = new Date(isoStr);
-    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    const now = new Date();
+    // Include year if different from current year
+    const opts = { month: 'short', day: 'numeric' };
+    if (d.getFullYear() !== now.getFullYear()) {
+      opts.year = 'numeric';
+    }
+    return d.toLocaleDateString(undefined, opts);
   }
 
   function formatTime(isoStr) {
@@ -107,8 +113,50 @@ const UI = (() => {
 
   function esc(str) { return _esc(str); }
 
+  /**
+   * Show a confirmation dialog via modal and return a promise that resolves to true/false.
+   */
+  function confirm(message, confirmLabel = 'Confirm', cancelLabel = 'Cancel') {
+    return new Promise((resolve) => {
+      const html = `
+        <div style="margin-bottom:var(--space-lg);font-size:var(--font-size-base);color:var(--text-secondary)">${_esc(message)}</div>
+        <div style="display:flex;gap:var(--space-md)">
+          <button class="btn btn-ghost btn-full" id="confirm-cancel">${_esc(cancelLabel)}</button>
+          <button class="btn btn-danger btn-full" id="confirm-ok">${_esc(confirmLabel)}</button>
+        </div>
+      `;
+      const modal = showModal(html, 'Confirm');
+      modal.querySelector('#confirm-ok').addEventListener('click', () => {
+        closeModal();
+        resolve(true);
+      });
+      modal.querySelector('#confirm-cancel').addEventListener('click', () => {
+        closeModal();
+        resolve(false);
+      });
+    });
+  }
+
+  /**
+   * Wrap an async action with button loading state (disabled + spinner text).
+   * Returns the result of the action.
+   */
+  async function withButtonLoading(btn, action, loadingText) {
+    if (!btn || btn.disabled) return;
+    const originalHTML = btn.innerHTML;
+    const originalDisabled = btn.disabled;
+    btn.disabled = true;
+    btn.innerHTML = loadingText || 'Loading…';
+    try {
+      return await action();
+    } finally {
+      btn.disabled = originalDisabled;
+      btn.innerHTML = originalHTML;
+    }
+  }
+
   return {
-    toast, showModal, closeModal,
+    toast, showModal, closeModal, confirm, withButtonLoading,
     formatDate, formatTime, formatDateTime,
     statusBadge, setLoading, isLoading, esc,
   };

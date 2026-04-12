@@ -105,7 +105,7 @@ class Draft(BaseModel):
         has_image = self.image_url is not None
 
         if self.content_type == ContentType.IMAGE and not has_image:
-            if has_text and not has_image:
+            if has_text:
                 # Text-only content but marked as IMAGE — that's inconsistent
                 raise ValueError(
                     "content_type is 'image' but only text_content is provided"

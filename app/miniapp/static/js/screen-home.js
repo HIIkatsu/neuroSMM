@@ -112,23 +112,25 @@ const ScreenHome = (() => {
       <button class="btn btn-primary btn-full" id="create-project-btn">Create project</button>
     `;
     const modal = UI.showModal(html, 'New project');
-    modal.querySelector('#create-project-btn').addEventListener('click', async () => {
+    modal.querySelector('#create-project-btn').addEventListener('click', async function() {
       const title = modal.querySelector('#new-project-title').value.trim();
       if (!title) { UI.toast('Enter a project name', 'error'); return; }
-      try {
-        const p = await API.createProject({
-          title,
-          description: modal.querySelector('#new-project-desc').value.trim(),
-        });
-        Store.update('projects', (ps) => [...ps, p]);
-        Store.setActiveProject(p.id);
-        UI.closeModal();
-        UI.toast('Project created!', 'success');
-        await App.loadProjectData();
-        render();
-      } catch (e) {
-        UI.toast(e.message, 'error');
-      }
+      await UI.withButtonLoading(this, async () => {
+        try {
+          const p = await API.createProject({
+            title,
+            description: modal.querySelector('#new-project-desc').value.trim(),
+          });
+          Store.update('projects', (ps) => [...ps, p]);
+          Store.setActiveProject(p.id);
+          UI.closeModal();
+          UI.toast('Project created!', 'success');
+          await App.loadProjectData();
+          render();
+        } catch (e) {
+          UI.toast(e.message, 'error');
+        }
+      }, 'Creating…');
     });
   }
 

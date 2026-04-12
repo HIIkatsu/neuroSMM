@@ -100,13 +100,12 @@ class PublishService:
         project = await self._project_repo.get_by_id(draft.project_id)
 
         if project.owner_id != user_id:
-            raise AuthorizationError("You do not have access to this project")
+            raise AuthorizationError("У вас нет доступа к этому проекту")
 
         # 2. Enforce READY state
         if draft.status != DraftStatus.READY:
             raise ConflictError(
-                f"Draft must be in 'ready' status to publish, "
-                f"current status is '{draft.status}'"
+                f"Черновик должен быть в статусе 'ready' для публикации, текущий статус: '{draft.status}'"
             )
 
         # 3. Build payload and publish

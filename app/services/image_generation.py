@@ -83,12 +83,12 @@ class ImageGenerationService:
         project = await self._project_repo.get_by_id(draft.project_id)
 
         if project.owner_id != user_id:
-            raise AuthorizationError("You do not have access to this project")
+            raise AuthorizationError("У вас нет доступа к этому проекту")
 
         # 2. Validate editable state
         if draft.status not in (DraftStatus.DRAFT, DraftStatus.READY):
             raise ValidationError(
-                f"Cannot generate image for draft in '{draft.status}' status"
+                f"Нельзя сгенерировать изображение для черновика в статусе '{draft.status}'"
             )
 
         # 3. Build prompt

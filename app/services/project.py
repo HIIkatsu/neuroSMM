@@ -102,4 +102,4 @@ class ProjectService:
     def _check_ownership(project: Project, user_id: int) -> None:
         """Raise AuthorizationError if the user does not own the project."""
         if project.owner_id != user_id:
-            raise AuthorizationError("You do not have access to this project")
+            raise AuthorizationError("У вас нет доступа к этому проекту")

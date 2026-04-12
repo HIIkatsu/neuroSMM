@@ -14,13 +14,15 @@ Usage::
 from __future__ import annotations
 
 from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
+from typing import Any
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.api.error_handlers import register_exception_handlers
-from app.api.routes import channels, drafts, generation, health, projects, publishing
+from app.api.routes import channels, drafts, generation, health, projects, publishing, scheduling
 from app.core.config import Settings, get_settings
 from app.core.constants import APP_NAME, APP_VERSION
 from app.core.logging import get_logger, setup_logging
@@ -32,6 +34,8 @@ logger = get_logger(__name__)
 def create_app(
     settings: Settings | None = None,
     session_factory: async_sessionmaker[AsyncSession] | None = None,
+    *,
+    start_scheduler: bool = False,
 ) -> FastAPI:
     """Build and return a configured :class:`FastAPI` instance.
 
@@ -41,6 +45,10 @@ def create_app(
         Optional settings override (used in tests).
     session_factory:
         Optional session factory override (used in tests).
+    start_scheduler:
+        When True, a :class:`SchedulerRunner` is started on app lifespan and
+        stopped on shutdown.  Disabled by default so tests stay fast and
+        deterministic.
     """
     if settings is None:
         settings = get_settings()
@@ -112,6 +120,38 @@ def create_app(
     application.include_router(generation.router, prefix=api_prefix)
     application.include_router(publishing.router, prefix=api_prefix)
     application.include_router(channels.router, prefix=api_prefix)
+    application.include_router(scheduling.router, prefix=api_prefix)
+
+    # ── scheduler lifespan ─────────────────────────────────────────
+    if start_scheduler and session_factory is not None:
+        from app.integrations.telegram.client import TelegramClient
+        from app.publishing.provider import StubPublisher
+        from app.publishing.telegram import TelegramPublisher
+        from app.scheduler.runner import SchedulerRunner
+
+        _sched_settings = settings
+        _sched_factory = session_factory
+
+        def _make_publisher() -> Any:
+            bot_token = _sched_settings.bot_token.get_secret_value()
+            if bot_token:
+                return TelegramPublisher(TelegramClient(bot_token))
+            return StubPublisher()
+
+        runner = SchedulerRunner(
+            session_factory=_sched_factory,
+            publisher_factory=_make_publisher,
+        )
+
+        @asynccontextmanager
+        async def _lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+            await runner.start()
+            try:
+                yield
+            finally:
+                await runner.stop()
+
+        application.router.lifespan_context = _lifespan
 
     logger.info(
         "FastAPI application created",

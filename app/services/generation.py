@@ -85,12 +85,12 @@ class TextGenerationService:
         from app.core.exceptions import AuthorizationError
 
         if project.owner_id != user_id:
-            raise AuthorizationError("You do not have access to this project")
+            raise AuthorizationError("У вас нет доступа к этому проекту")
 
         # 2. Validate editable state
         if draft.status not in (DraftStatus.DRAFT, DraftStatus.READY):
             raise ValidationError(
-                f"Cannot generate text for draft in '{draft.status}' status"
+                f"Нельзя сгенерировать текст для черновика в статусе '{draft.status}'"
             )
 
         # 3. Build prompt
@@ -102,7 +102,7 @@ class TextGenerationService:
         # 5. Handle result
         if result.is_failure:
             raise ExternalServiceError(
-                result.error_message or "Text generation failed"
+                "Не удалось сгенерировать текст. Попробуйте позже."
             )
 
         # 6. Apply generated text to draft

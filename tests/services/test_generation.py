@@ -172,7 +172,7 @@ class TestGenerateTextForDraft:
         result = _failure_result(error="API timeout")
         service = _build_service(draft=draft, project=project, provider_result=result)
 
-        with pytest.raises(ExternalServiceError, match="API timeout"):
+        with pytest.raises(ExternalServiceError, match="сгенерировать текст|generation failed"):
             await service.generate_text_for_draft(draft_id=10, user_id=1)
 
     async def test_max_tokens_forwarded_to_provider(self) -> None:

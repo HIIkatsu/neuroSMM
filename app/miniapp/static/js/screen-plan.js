@@ -5,6 +5,8 @@
 const ScreenPlan = (() => {
   let _selectedDate = new Date();
 
+  const _statusLabels = { pending: 'ЗАПЛАНИРОВАН', failed: 'ОШИБКА', published: 'ОПУБЛИКОВАН', cancelled: 'ОТМЕНЁН' };
+
   function render() {
     const el = document.getElementById('screen-plan');
     const project = Store.getActiveProject();
@@ -13,11 +15,11 @@ const ScreenPlan = (() => {
 
     if (!project) {
       el.innerHTML = `
-        <div class="page-header"><div class="page-title">Plan</div></div>
+        <div class="page-header"><div class="page-title">План</div></div>
         <div class="empty-state">
           <div class="empty-state-icon">📅</div>
-          <div class="empty-state-title">No project yet</div>
-          <div class="empty-state-desc">Create a project first to see your schedule</div>
+          <div class="empty-state-title">Нет проекта</div>
+          <div class="empty-state-desc">Сначала создайте проект, чтобы увидеть расписание</div>
         </div>`;
       return;
     }
@@ -28,7 +30,7 @@ const ScreenPlan = (() => {
 
     el.innerHTML = `
       <div class="page-header">
-        <div class="page-title">Plan</div>
+        <div class="page-title">План</div>
       </div>
 
       <div class="week-selector">
@@ -49,15 +51,15 @@ const ScreenPlan = (() => {
         ${timeSlots.length === 0 ? `
           <div class="empty-state" style="padding:var(--space-2xl) 0">
             <div class="empty-state-icon">📅</div>
-            <div class="empty-state-title">Nothing scheduled</div>
-            <div class="empty-state-desc">No posts planned for this day</div>
+            <div class="empty-state-title">Ничего не запланировано</div>
+            <div class="empty-state-desc">Нет постов на этот день</div>
           </div>
         ` : ''}
 
         ${timeSlots.map(slot => {
           if (slot.type === 'scheduled') {
             const statusClass = `status-${slot.schedule.status === 'pending' ? 'scheduled' : slot.schedule.status}`;
-            const statusLabel = slot.schedule.status === 'pending' ? 'SCHEDULED' : slot.schedule.status.toUpperCase();
+            const statusLabel = _statusLabels[slot.schedule.status] || slot.schedule.status.toUpperCase();
             return `
               <div class="timeline-slot">
                 <div class="timeline-time">${slot.time}</div>
@@ -72,14 +74,14 @@ const ScreenPlan = (() => {
               <div class="timeline-slot">
                 <div class="timeline-time">${slot.time}</div>
                 <div class="timeline-card-empty" onclick="ScreenPlan.addAtTime('${slot.time}')">
-                  + Schedule
+                  + Запланировать
                 </div>
               </div>`;
           }
         }).join('')}
       </div>
 
-      <button class="fab" onclick="ScreenPlan.addAtTime(null)" aria-label="Add scheduled post">
+      <button class="fab" onclick="ScreenPlan.addAtTime(null)" aria-label="Добавить запланированный пост">
         ${Icons.plus}
       </button>
     `;
@@ -99,7 +101,7 @@ const ScreenPlan = (() => {
     const monday = new Date(d);
     monday.setDate(d.getDate() - ((dayOfWeek + 6) % 7));
 
-    const names = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+    const names = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС'];
     for (let i = 0; i < 7; i++) {
       const day = new Date(monday);
       day.setDate(monday.getDate() + i);
@@ -145,7 +147,7 @@ const ScreenPlan = (() => {
         type: 'scheduled',
         time,
         schedule: item.schedule,
-        draftTitle: item.draft?.title || 'Untitled post',
+        draftTitle: item.draft?.title || 'Без названия',
       });
     }
 
@@ -175,7 +177,7 @@ const ScreenPlan = (() => {
 
     let actions = '';
     if (schedule.status === 'pending') {
-      actions = `<button class="btn btn-danger btn-full" id="cancel-schedule-btn">Cancel schedule</button>`;
+      actions = `<button class="btn btn-danger btn-full" id="cancel-schedule-btn">Отменить расписание</button>`;
     } else if (schedule.status === 'failed') {
       const retryDefault = new Date();
       retryDefault.setHours(retryDefault.getHours() + 1);
@@ -183,21 +185,21 @@ const ScreenPlan = (() => {
       const retryTimeValue = retryDefault.toISOString().slice(0, 16);
       actions = `
         <div class="input-group">
-          <label class="input-label" for="retry-time">New time (UTC)</label>
+          <label class="input-label" for="retry-time">Новое время (UTC)</label>
           <input class="input" type="datetime-local" id="retry-time" value="${retryTimeValue}" />
         </div>
-        <button class="btn btn-primary btn-full" id="retry-schedule-btn">${Icons.refresh} Retry</button>
+        <button class="btn btn-primary btn-full" id="retry-schedule-btn">${Icons.refresh} Повторить</button>
       `;
     }
 
     const html = `
       <div class="card" style="margin-bottom:var(--space-lg)">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-md)">
-          <span style="font-weight:var(--font-weight-semibold)">${UI.esc(draft?.title || 'Untitled')}</span>
+          <span style="font-weight:var(--font-weight-semibold)">${UI.esc(draft?.title || 'Без названия')}</span>
           ${UI.statusBadge(schedule.status)}
         </div>
         <div style="font-size:var(--font-size-sm);color:var(--text-secondary)">
-          Scheduled for ${UI.formatDateTime(schedule.publish_at)}
+          Запланировано на ${UI.formatDateTime(schedule.publish_at)}
         </div>
         ${schedule.failure_reason ? `
           <div style="margin-top:var(--space-sm);font-size:var(--font-size-sm);color:var(--status-failed)">
@@ -205,44 +207,44 @@ const ScreenPlan = (() => {
           </div>` : ''}
         ${schedule.published_at ? `
           <div style="margin-top:var(--space-sm);font-size:var(--font-size-sm);color:var(--status-published)">
-            Published at ${UI.formatDateTime(schedule.published_at)}
+            Опубликовано ${UI.formatDateTime(schedule.published_at)}
           </div>` : ''}
       </div>
       ${actions}
     `;
 
-    const modal = UI.showModal(html, 'Scheduled post');
+    const modal = UI.showModal(html, 'Запланированный пост');
 
     modal.querySelector('#cancel-schedule-btn')?.addEventListener('click', async function() {
-      const confirmed = await UI.confirm('Cancel this scheduled post?', 'Cancel schedule');
+      const confirmed = await UI.confirm('Отменить запланированный пост?', 'Отменить расписание');
       if (!confirmed) return;
       await UI.withButtonLoading(this, async () => {
         try {
           await API.cancelSchedule(project.id, scheduleId);
           UI.closeModal();
-          UI.toast('Schedule cancelled', 'success');
+          UI.toast('Расписание отменено', 'success');
           await App.loadProjectData();
           render();
         } catch (e) { UI.toast(e.message, 'error'); }
-      }, 'Cancelling…');
+      }, 'Отмена…');
     });
 
     modal.querySelector('#retry-schedule-btn')?.addEventListener('click', async function() {
       const val = modal.querySelector('#retry-time').value;
-      if (!val) { UI.toast('Pick a time', 'error'); return; }
+      if (!val) { UI.toast('Выберите время', 'error'); return; }
       const selectedTime = new Date(val);
-      if (selectedTime <= new Date()) { UI.toast('Retry time must be in the future', 'error'); return; }
+      if (selectedTime <= new Date()) { UI.toast('Время должно быть в будущем', 'error'); return; }
       await UI.withButtonLoading(this, async () => {
         try {
           await API.retrySchedule(project.id, scheduleId, {
             new_publish_at: selectedTime.toISOString(),
           });
           UI.closeModal();
-          UI.toast('Schedule retried', 'success');
+          UI.toast('Расписание обновлено', 'success');
           await App.loadProjectData();
           render();
         } catch (e) { UI.toast(e.message, 'error'); }
-      }, 'Retrying…');
+      }, 'Повтор…');
     });
   }
 
@@ -252,7 +254,7 @@ const ScreenPlan = (() => {
     const readyDrafts = drafts.filter(d => d.status === 'ready');
 
     if (readyDrafts.length === 0) {
-      UI.toast('No ready drafts. Create and mark a draft as ready first.', 'info');
+      UI.toast('Нет готовых черновиков. Сначала создайте и отметьте черновик.', 'info');
       App.navigate('create');
       return;
     }
@@ -281,34 +283,34 @@ const ScreenPlan = (() => {
 
     const html = `
       <div class="input-group">
-        <label class="input-label" for="sched-draft">Select draft</label>
+        <label class="input-label" for="sched-draft">Выберите черновик</label>
         <select class="input" id="sched-draft">
-          ${readyDrafts.map(d => `<option value="${d.id}">${UI.esc(d.title || 'Untitled')}</option>`).join('')}
+          ${readyDrafts.map(d => `<option value="${d.id}">${UI.esc(d.title || 'Без названия')}</option>`).join('')}
         </select>
       </div>
       <div class="input-group">
-        <label class="input-label" for="sched-time">Publish at (UTC)</label>
+        <label class="input-label" for="sched-time">Дата публикации (UTC)</label>
         <input class="input" type="datetime-local" id="sched-time" value="${defaultTime.toISOString().slice(0, 16)}" />
       </div>
-      <button class="btn btn-primary btn-full" id="confirm-add-schedule">Schedule</button>
+      <button class="btn btn-primary btn-full" id="confirm-add-schedule">Запланировать</button>
     `;
 
-    const modal = UI.showModal(html, 'Schedule a post');
+    const modal = UI.showModal(html, 'Запланировать пост');
     modal.querySelector('#confirm-add-schedule').addEventListener('click', async function() {
       const draftId = parseInt(modal.querySelector('#sched-draft').value, 10);
       const val = modal.querySelector('#sched-time').value;
-      if (!val) { UI.toast('Pick a time', 'error'); return; }
+      if (!val) { UI.toast('Выберите время', 'error'); return; }
       const selectedTime = new Date(val);
-      if (selectedTime <= new Date()) { UI.toast('Schedule time must be in the future', 'error'); return; }
+      if (selectedTime <= new Date()) { UI.toast('Время должно быть в будущем', 'error'); return; }
       await UI.withButtonLoading(this, async () => {
         try {
           await API.scheduleDraft(project.id, draftId, { publish_at: selectedTime.toISOString() });
           UI.closeModal();
-          UI.toast('Post scheduled!', 'success');
+          UI.toast('Пост запланирован!', 'success');
           await App.loadProjectData();
           render();
         } catch (e) { UI.toast(e.message, 'error'); }
-      }, 'Scheduling…');
+      }, 'Планирование…');
     });
   }
 

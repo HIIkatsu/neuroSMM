@@ -2,6 +2,18 @@
  * NeuroSMM V2 Mini App — UI Helpers & Toast System
  */
 const UI = (() => {
+  // ── Status label map (RU) ─────────────────────────────────
+  const STATUS_LABELS = {
+    draft: 'Черновик',
+    ready: 'Готов',
+    published: 'Опубликован',
+    archived: 'В архиве',
+    pending: 'Ожидает',
+    scheduled: 'Запланирован',
+    failed: 'Ошибка',
+    cancelled: 'Отменён',
+  };
+
   // ── Toast ─────────────────────────────────────────────────
   let _toastContainer;
 
@@ -69,24 +81,22 @@ const UI = (() => {
   function formatDate(isoStr) {
     if (!isoStr) return '—';
     const d = new Date(isoStr);
-    const now = new Date();
-    // Include year if different from current year
-    const opts = { month: 'short', day: 'numeric' };
-    if (d.getFullYear() !== now.getFullYear()) {
-      opts.year = 'numeric';
-    }
-    return d.toLocaleDateString(undefined, opts);
+    return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: d.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined });
   }
 
   function formatTime(isoStr) {
     if (!isoStr) return '—';
     const d = new Date(isoStr);
-    return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', hour12: false });
+    return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', hour12: false });
   }
 
   function formatDateTime(isoStr) {
     if (!isoStr) return '—';
     return `${formatDate(isoStr)} ${formatTime(isoStr)}`;
+  }
+
+  function statusLabel(status) {
+    return STATUS_LABELS[status] || status;
   }
 
   function statusBadge(status) {
@@ -100,7 +110,7 @@ const UI = (() => {
       failed: 'badge-failed',
       cancelled: 'badge-cancelled',
     }[status] || 'badge-draft';
-    return `<span class="badge ${cls}">${_esc(status)}</span>`;
+    return `<span class="badge ${cls}">${_esc(statusLabel(status))}</span>`;
   }
 
   function setLoading(key, isLoading) {
@@ -116,7 +126,7 @@ const UI = (() => {
   /**
    * Show a confirmation dialog via modal and return a promise that resolves to true/false.
    */
-  function confirm(message, confirmLabel = 'Confirm', cancelLabel = 'Cancel') {
+  function confirm(message, confirmLabel = 'Подтвердить', cancelLabel = 'Отмена') {
     return new Promise((resolve) => {
       const html = `
         <div style="margin-bottom:var(--space-lg);font-size:var(--font-size-base);color:var(--text-secondary)">${_esc(message)}</div>
@@ -125,7 +135,7 @@ const UI = (() => {
           <button class="btn btn-danger btn-full" id="confirm-ok">${_esc(confirmLabel)}</button>
         </div>
       `;
-      const modal = showModal(html, 'Confirm');
+      const modal = showModal(html, 'Подтверждение');
       modal.querySelector('#confirm-ok').addEventListener('click', () => {
         closeModal();
         resolve(true);
@@ -146,7 +156,7 @@ const UI = (() => {
     const originalHTML = btn.innerHTML;
     const originalDisabled = btn.disabled;
     btn.disabled = true;
-    btn.innerHTML = loadingText || 'Loading…';
+    btn.innerHTML = loadingText || 'Загрузка…';
     try {
       return await action();
     } finally {
@@ -158,6 +168,6 @@ const UI = (() => {
   return {
     toast, showModal, closeModal, confirm, withButtonLoading,
     formatDate, formatTime, formatDateTime,
-    statusBadge, setLoading, isLoading, esc,
+    statusBadge, statusLabel, setLoading, isLoading, esc,
   };
 })();

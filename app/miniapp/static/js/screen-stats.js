@@ -11,11 +11,11 @@ const ScreenStats = (() => {
 
     if (!project) {
       el.innerHTML = `
-        <div class="page-header"><div class="page-title">Stats</div></div>
+        <div class="page-header"><div class="page-title">Статистика</div></div>
         <div class="empty-state">
           <div class="empty-state-icon">📊</div>
-          <div class="empty-state-title">No project yet</div>
-          <div class="empty-state-desc">Create a project to see statistics</div>
+          <div class="empty-state-title">Нет проекта</div>
+          <div class="empty-state-desc">Создайте проект для просмотра статистики</div>
         </div>`;
       return;
     }
@@ -43,18 +43,18 @@ const ScreenStats = (() => {
 
     el.innerHTML = `
       <div class="page-header">
-        <div class="page-title">Stats</div>
+        <div class="page-title">Статистика</div>
         <div class="page-subtitle">${UI.esc(project.title)}</div>
       </div>
 
       <div class="hero-card">
         <div style="display:flex;justify-content:space-between;align-items:flex-start">
           <div>
-            <div style="font-size:var(--font-size-sm);color:var(--text-secondary);margin-bottom:var(--space-xs)">Total published</div>
+            <div style="font-size:var(--font-size-sm);color:var(--text-secondary);margin-bottom:var(--space-xs)">Опубликовано</div>
             <div style="font-size:40px;font-weight:var(--font-weight-bold);line-height:1">${publishedDrafts}</div>
           </div>
           <div style="text-align:right">
-            <div style="font-size:var(--font-size-sm);color:var(--text-secondary);margin-bottom:var(--space-xs)">Publish rate</div>
+            <div style="font-size:var(--font-size-sm);color:var(--text-secondary);margin-bottom:var(--space-xs)">Конверсия</div>
             <div style="font-size:var(--font-size-2xl);font-weight:var(--font-weight-bold);color:var(--accent-light)">${publishRate}%</div>
           </div>
         </div>
@@ -62,64 +62,64 @@ const ScreenStats = (() => {
           <div class="progress-fill" style="width:${publishRate}%"></div>
         </div>
         <div style="display:flex;justify-content:space-between;margin-top:var(--space-sm);font-size:var(--font-size-xs);color:var(--text-muted)">
-          <span>${publishedDrafts} published</span>
-          <span>${totalDrafts} total drafts</span>
+          <span>${publishedDrafts} опубл.</span>
+          <span>${totalDrafts} всего черн.</span>
         </div>
       </div>
 
-      <div class="section-title">Content overview</div>
+      <div class="section-title">Обзор контента</div>
       <div class="metric-grid">
         <div class="metric-card">
           <div class="metric-value" style="color:var(--status-draft)">${activeDrafts}</div>
-          <div class="metric-label">In progress</div>
+          <div class="metric-label">В работе</div>
         </div>
         <div class="metric-card">
           <div class="metric-value" style="color:var(--status-pending)">${readyDrafts}</div>
-          <div class="metric-label">Ready</div>
+          <div class="metric-label">Готовы</div>
         </div>
         <div class="metric-card">
           <div class="metric-value" style="color:var(--status-published)">${publishedDrafts}</div>
-          <div class="metric-label">Published</div>
+          <div class="metric-label">Опубликовано</div>
         </div>
         <div class="metric-card">
           <div class="metric-value" style="color:var(--text-muted)">${archivedDrafts}</div>
-          <div class="metric-label">Archived</div>
+          <div class="metric-label">В архиве</div>
         </div>
       </div>
 
-      <div class="section-title">Schedule performance</div>
+      <div class="section-title">Расписание</div>
       <div class="card">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-md)">
           <div>
             <div style="font-size:var(--font-size-2xl);font-weight:var(--font-weight-bold)">${totalSchedules}</div>
-            <div style="font-size:var(--font-size-xs);color:var(--text-muted)">Total schedules</div>
+            <div style="font-size:var(--font-size-xs);color:var(--text-muted)">Всего</div>
           </div>
           <div style="text-align:right">
             <div style="font-size:var(--font-size-xl);font-weight:var(--font-weight-bold);color:var(--accent-light)">${scheduleSuccessRate}%</div>
-            <div style="font-size:var(--font-size-xs);color:var(--text-muted)">Success rate</div>
+            <div style="font-size:var(--font-size-xs);color:var(--text-muted)">Успешность</div>
           </div>
         </div>
         <div style="display:flex;gap:var(--space-md);font-size:var(--font-size-sm)">
-          <span style="color:var(--status-pending)">⏳ ${pendingSchedules} pending</span>
-          <span style="color:var(--status-published)">✓ ${publishedSchedules} done</span>
-          <span style="color:var(--status-failed)">✗ ${failedSchedules} failed</span>
+          <span style="color:var(--status-pending)">⏳ ${pendingSchedules} ожидает</span>
+          <span style="color:var(--status-published)">✓ ${publishedSchedules} выполнено</span>
+          <span style="color:var(--status-failed)">✗ ${failedSchedules} ошибка</span>
         </div>
       </div>
 
       ${nextScheduled ? `
-        <div class="section-title">Next scheduled</div>
+        <div class="section-title">Следующая публикация</div>
         <div class="card card-accent">
           <div style="display:flex;align-items:center;gap:var(--space-md)">
             <div style="color:var(--accent-light)">${Icons.clock}</div>
             <div>
               <div style="font-weight:var(--font-weight-semibold)">${UI.formatDateTime(nextScheduled.publish_at)}</div>
-              <div style="font-size:var(--font-size-xs);color:var(--text-muted)">Draft #${nextScheduled.draft_id}</div>
+              <div style="font-size:var(--font-size-xs);color:var(--text-muted)">Черновик #${nextScheduled.draft_id}</div>
             </div>
           </div>
         </div>
       ` : ''}
 
-      <div class="section-title">Insights</div>
+      <div class="section-title">Подсказки</div>
       <div class="card">
         ${_buildInsights(drafts, schedules, project)}
       </div>
@@ -130,25 +130,25 @@ const ScreenStats = (() => {
     const insights = [];
 
     if (drafts.length === 0) {
-      insights.push({ icon: '💡', text: 'Create your first draft to get started with AI content generation.' });
+      insights.push({ icon: '💡', text: 'Создайте первый черновик, чтобы начать генерацию контента с ИИ.' });
     }
 
     const readyCount = drafts.filter(d => d.status === 'ready').length;
     if (readyCount > 0) {
-      insights.push({ icon: '📦', text: `You have ${readyCount} draft${readyCount !== 1 ? 's' : ''} ready to publish or schedule.` });
+      insights.push({ icon: '📦', text: `У вас ${readyCount} черновик(ов) готовы к публикации.` });
     }
 
     const failedSchedules = schedules.filter(s => s.status === 'failed');
     if (failedSchedules.length > 0) {
-      insights.push({ icon: '⚠️', text: `${failedSchedules.length} failed schedule${failedSchedules.length !== 1 ? 's' : ''} need attention. Go to Plan to retry.` });
+      insights.push({ icon: '⚠️', text: `${failedSchedules.length} неудачных публикаций. Перейдите в План для повтора.` });
     }
 
     if (!project.platform_channel_id) {
-      insights.push({ icon: '📡', text: 'Connect a Telegram channel to start publishing directly.' });
+      insights.push({ icon: '📡', text: 'Подключите Telegram-канал для прямой публикации.' });
     }
 
     if (insights.length === 0) {
-      insights.push({ icon: '✨', text: 'Everything looks good! Keep creating great content.' });
+      insights.push({ icon: '✨', text: 'Всё отлично! Продолжайте создавать контент.' });
     }
 
     return insights.map(i => `

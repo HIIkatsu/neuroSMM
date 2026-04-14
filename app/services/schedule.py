@@ -90,7 +90,7 @@ class ScheduleService:
         # 1. Verify project ownership
         project = await self._project_repo.get_by_id(project_id)
         if project.owner_id != user_id:
-            raise AuthorizationError("You do not have access to this project")
+            raise AuthorizationError("У вас нет доступа к этому проекту")
 
         # 2. Verify draft belongs to this project
         draft = await self._draft_repo.get_by_id(draft_id)
@@ -102,8 +102,8 @@ class ScheduleService:
 
         if draft.status != DraftStatus.READY:
             raise ConflictError(
-                f"Draft must be in 'ready' status to schedule, "
-                f"current status is '{draft.status}'"
+                "Черновик должен быть в статусе 'ready' для планирования,"
+                f" текущий статус: '{draft.status}'"
             )
 
         # 4. Build domain object (validates publish_at timezone + future check)
@@ -251,7 +251,7 @@ class ScheduleService:
         """Raise :class:`AuthorizationError` if user does not own the project."""
         project = await self._project_repo.get_by_id(project_id)
         if project.owner_id != user_id:
-            raise AuthorizationError("You do not have access to this project")
+            raise AuthorizationError("У вас нет доступа к этому проекту")
 
 
 # ── factory helper ────────────────────────────────────────────────────

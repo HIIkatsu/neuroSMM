@@ -317,8 +317,8 @@ class TestMiniAppScreens:
         """Home screen shows active project info."""
         resp = await client.get("/static/js/screen-home.js")
         text = resp.text
-        assert "Active project" in text
-        assert "Quick actions" in text
+        assert "Активный проект" in text
+        assert "Быстрые действия" in text
 
     async def test_create_screen_has_draft_editor(self, client: AsyncClient):
         """Create screen has draft editing form."""

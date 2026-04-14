@@ -112,7 +112,7 @@ class TestBindChannel:
         project = _make_project(owner_id=99)
         service = _build_service(project=project)
 
-        with pytest.raises(AuthorizationError, match="access"):
+        with pytest.raises(AuthorizationError, match="доступа|access"):
             await service.bind_channel(
                 project_id=1,
                 user_id=1,
@@ -125,7 +125,7 @@ class TestBindChannel:
         project = _make_project()
         service = _build_service(project=project)
 
-        with pytest.raises(ValidationError, match="empty"):
+        with pytest.raises(ValidationError, match="идентификатор|empty"):
             await service.bind_channel(
                 project_id=1,
                 user_id=1,
@@ -138,7 +138,7 @@ class TestBindChannel:
         project = _make_project()
         service = _build_service(project=project)
 
-        with pytest.raises(ValidationError, match="empty"):
+        with pytest.raises(ValidationError, match="идентификатор|empty"):
             await service.bind_channel(
                 project_id=1,
                 user_id=1,
@@ -154,7 +154,7 @@ class TestBindChannel:
             get_chat_error=TelegramClientError("Chat not found"),
         )
 
-        with pytest.raises(ExternalServiceError, match="verify channel"):
+        with pytest.raises(ExternalServiceError, match="канал|verify channel"):
             await service.bind_channel(
                 project_id=1,
                 user_id=1,
@@ -172,7 +172,7 @@ class TestBindChannel:
             get_member_error=TelegramClientError("User not found"),
         )
 
-        with pytest.raises(ExternalServiceError, match="admin rights"):
+        with pytest.raises(ExternalServiceError, match="права|admin rights"):
             await service.bind_channel(
                 project_id=1,
                 user_id=1,
@@ -189,7 +189,7 @@ class TestBindChannel:
             project=project, chat_info=chat_info, admin_info=admin_info
         )
 
-        with pytest.raises(AuthorizationError, match="admin"):
+        with pytest.raises(AuthorizationError, match="администратором|admin"):
             await service.bind_channel(
                 project_id=1,
                 user_id=1,
@@ -208,7 +208,7 @@ class TestBindChannel:
             project=project, chat_info=chat_info, admin_info=admin_info
         )
 
-        with pytest.raises(AuthorizationError, match="post messages"):
+        with pytest.raises(AuthorizationError, match="публиковать|post messages"):
             await service.bind_channel(
                 project_id=1,
                 user_id=1,

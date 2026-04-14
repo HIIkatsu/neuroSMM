@@ -1,10 +1,32 @@
 /**
- * NeuroSMM V2 — Create Screen
- * Draft creation, editing, AI generation, preview & publish.
+ * NeuroSMM V2 — Экран «Создать»
+ * Создание черновиков, редактирование, ИИ-генерация, предпросмотр и публикация.
  */
 const ScreenCreate = (() => {
   let _currentDraftId = null;
   let _mode = 'list'; // 'list' | 'edit'
+
+  const TONE_LABELS = {
+    neutral: 'нейтральный',
+    formal: 'формальный',
+    casual: 'разговорный',
+    humorous: 'юмористический',
+    promotional: 'рекламный',
+  };
+
+  const CONTENT_TYPE_LABELS = {
+    text: 'текст',
+    image: 'изображение',
+    text_and_image: 'текст + изображение',
+  };
+
+  function _toneLabel(tone) {
+    return TONE_LABELS[tone] || tone;
+  }
+
+  function _contentTypeLabel(ct) {
+    return CONTENT_TYPE_LABELS[ct] || ct.replace(/_/g, ' ');
+  }
 
   function render() {
     if (_mode === 'edit' && _currentDraftId) {
@@ -21,11 +43,11 @@ const ScreenCreate = (() => {
 
     if (!project) {
       el.innerHTML = `
-        <div class="page-header"><div class="page-title">Create</div></div>
+        <div class="page-header"><div class="page-title">Создать</div></div>
         <div class="empty-state">
           <div class="empty-state-icon">📝</div>
-          <div class="empty-state-title">No project yet</div>
-          <div class="empty-state-desc">Create a project on the Home screen first</div>
+          <div class="empty-state-title">Нет проекта</div>
+          <div class="empty-state-desc">Сначала создайте проект на главном экране</div>
         </div>`;
       return;
     }
@@ -35,35 +57,35 @@ const ScreenCreate = (() => {
     el.innerHTML = `
       <div class="page-header">
         <div style="display:flex;align-items:center;justify-content:space-between">
-          <div class="page-title">Create</div>
+          <div class="page-title">Создать</div>
           <button class="btn btn-primary btn-sm" onclick="ScreenCreate.newDraft()">
-            ${Icons.plus} New
+            ${Icons.plus} Новый
           </button>
         </div>
-        <div class="page-subtitle">${activeDrafts.length} draft${activeDrafts.length !== 1 ? 's' : ''}</div>
+        <div class="page-subtitle">${activeDrafts.length} черновик(ов)</div>
       </div>
 
       ${activeDrafts.length === 0 ? `
         <div class="empty-state">
           <div class="empty-state-icon">✨</div>
-          <div class="empty-state-title">No drafts yet</div>
-          <div class="empty-state-desc">Create your first AI-powered draft</div>
-          <button class="btn btn-primary" onclick="ScreenCreate.newDraft()">Create draft</button>
+          <div class="empty-state-title">Нет черновиков</div>
+          <div class="empty-state-desc">Создайте первый ИИ-черновик</div>
+          <button class="btn btn-primary" onclick="ScreenCreate.newDraft()">Создать черновик</button>
         </div>
       ` : `
         <div style="display:flex;flex-direction:column;gap:var(--space-md)">
           ${activeDrafts.map(d => `
             <div class="card card-interactive" onclick="ScreenCreate.openDraft(${d.id})" style="cursor:pointer">
               <div class="card-header">
-                <div class="card-title">${UI.esc(d.title || 'Untitled draft')}</div>
+                <div class="card-title">${UI.esc(d.title || 'Без названия')}</div>
                 ${UI.statusBadge(d.status)}
               </div>
               <div style="font-size:var(--font-size-sm);color:var(--text-secondary);margin-bottom:var(--space-sm)">
-                ${d.text_content ? UI.esc(d.text_content.substring(0, 80)) + (d.text_content.length > 80 ? '…' : '') : 'No content yet'}
+                ${d.text_content ? UI.esc(d.text_content.substring(0, 80)) + (d.text_content.length > 80 ? '…' : '') : 'Пока нет контента'}
               </div>
               <div style="display:flex;gap:var(--space-md);font-size:var(--font-size-xs);color:var(--text-muted)">
-                <span>${d.tone}</span>
-                <span>${d.content_type.replace(/_/g, ' ')}</span>
+                <span>${_toneLabel(d.tone)}</span>
+                <span>${_contentTypeLabel(d.content_type)}</span>
                 <span>${UI.formatDate(d.updated_at)}</span>
               </div>
             </div>
@@ -93,9 +115,9 @@ const ScreenCreate = (() => {
     el.innerHTML = `
       <div class="page-header">
         <div style="display:flex;align-items:center;gap:var(--space-md)">
-          <button class="btn btn-ghost btn-sm" onclick="ScreenCreate.backToList()">← Back</button>
+          <button class="btn btn-ghost btn-sm" onclick="ScreenCreate.backToList()">← Назад</button>
           <div style="flex:1">
-            <div class="page-title" style="font-size:var(--font-size-xl)">${UI.esc(draft.title || 'Untitled')}</div>
+            <div class="page-title" style="font-size:var(--font-size-xl)">${UI.esc(draft.title || 'Без названия')}</div>
             <div style="display:flex;gap:var(--space-sm);align-items:center;margin-top:var(--space-xs)">
               ${UI.statusBadge(draft.status)}
               <span style="font-size:var(--font-size-xs);color:var(--text-muted)">${UI.formatDateTime(draft.updated_at)}</span>
@@ -107,59 +129,59 @@ const ScreenCreate = (() => {
       ${isEditable ? `
         <div class="card">
           <div class="input-group">
-            <label class="input-label" for="draft-title">Title</label>
-            <input class="input" id="draft-title" value="${UI.esc(draft.title)}" placeholder="Post title" />
+            <label class="input-label" for="draft-title">Заголовок</label>
+            <input class="input" id="draft-title" value="${UI.esc(draft.title)}" placeholder="Заголовок поста" />
           </div>
           <div class="input-group">
-            <label class="input-label" for="draft-topic">Topic / hint for AI</label>
-            <input class="input" id="draft-topic" value="${UI.esc(draft.topic)}" placeholder="e.g. AI productivity tools" />
+            <label class="input-label" for="draft-topic">Тема / подсказка для ИИ</label>
+            <input class="input" id="draft-topic" value="${UI.esc(draft.topic)}" placeholder="например, ИИ-инструменты продуктивности" />
           </div>
           <div class="input-group">
-            <label class="input-label" for="draft-text">Content</label>
-            <textarea class="input" id="draft-text" rows="6" placeholder="Write or generate with AI…">${UI.esc(draft.text_content)}</textarea>
+            <label class="input-label" for="draft-text">Текст</label>
+            <textarea class="input" id="draft-text" rows="6" placeholder="Напишите или сгенерируйте с помощью ИИ…">${UI.esc(draft.text_content)}</textarea>
           </div>
           <div style="display:flex;gap:var(--space-md)">
-            <button class="btn btn-secondary btn-sm btn-full" id="save-draft-btn">Save</button>
+            <button class="btn btn-secondary btn-sm btn-full" id="save-draft-btn">Сохранить</button>
           </div>
         </div>
 
-        <div class="section-title">AI Generation</div>
+        <div class="section-title">ИИ-генерация</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-md)">
-          <button class="btn btn-primary btn-sm btn-full" id="gen-text-btn" ${!features?.text_generation ? 'disabled title="Not configured"' : ''}>
-            ${Icons.sparkle} Text
+          <button class="btn btn-primary btn-sm btn-full" id="gen-text-btn" ${!features?.text_generation ? 'disabled title="Не настроена"' : ''}>
+            ${Icons.sparkle} Текст
           </button>
-          <button class="btn btn-secondary btn-sm btn-full" id="gen-image-btn" ${!features?.image_generation ? 'disabled title="Not configured"' : ''}>
-            ${Icons.image} Image
+          <button class="btn btn-secondary btn-sm btn-full" id="gen-image-btn" ${!features?.image_generation ? 'disabled title="Не настроена"' : ''}>
+            ${Icons.image} Картинка
           </button>
         </div>
 
         ${draft.image_url ? `
-          <div class="section-title">Generated image</div>
+          <div class="section-title">Сгенерированное изображение</div>
           <div class="card" style="padding:var(--space-sm)">
-            <img src="${UI.esc(draft.image_url)}" alt="Generated" style="width:100%;border-radius:var(--radius-md)" />
+            <img src="${UI.esc(draft.image_url)}" alt="Сгенерированное изображение" style="width:100%;border-radius:var(--radius-md)" />
           </div>
         ` : ''}
 
-        <div class="section-title">Actions</div>
+        <div class="section-title">Действия</div>
         <div style="display:flex;gap:var(--space-md)">
-          <button class="btn btn-primary btn-sm btn-full" id="mark-ready-btn">Mark as ready</button>
-          <button class="btn btn-danger btn-sm" id="archive-btn" title="Archive">${Icons.trash}</button>
+          <button class="btn btn-primary btn-sm btn-full" id="mark-ready-btn">Отметить готовым</button>
+          <button class="btn btn-danger btn-sm" id="archive-btn" title="Архивировать">${Icons.trash}</button>
         </div>
       ` : ''}
 
       ${isReady ? `
         <div class="card card-accent">
           <div style="text-align:center;padding:var(--space-lg) 0">
-            <div style="font-size:var(--font-size-xl);font-weight:var(--font-weight-bold);margin-bottom:var(--space-sm)">Ready to publish</div>
-            <div style="color:var(--text-secondary);margin-bottom:var(--space-lg)">${UI.esc(draft.title || 'Untitled')}</div>
+            <div style="font-size:var(--font-size-xl);font-weight:var(--font-weight-bold);margin-bottom:var(--space-sm)">Готов к публикации</div>
+            <div style="color:var(--text-secondary);margin-bottom:var(--space-lg)">${UI.esc(draft.title || 'Без названия')}</div>
             <div style="display:flex;gap:var(--space-md);justify-content:center">
-              <button class="btn btn-primary" id="publish-btn">${Icons.send} Publish now</button>
-              <button class="btn btn-secondary" id="schedule-btn">${Icons.clock} Schedule</button>
+              <button class="btn btn-primary" id="publish-btn">${Icons.send} Опубликовать</button>
+              <button class="btn btn-secondary" id="schedule-btn">${Icons.clock} Запланировать</button>
             </div>
           </div>
         </div>
 
-        <div class="section-title">Preview</div>
+        <div class="section-title">Предпросмотр</div>
         <div class="card" id="preview-card">
           <div style="font-weight:var(--font-weight-semibold);margin-bottom:var(--space-sm)">${UI.esc(draft.title)}</div>
           <div style="font-size:var(--font-size-sm);color:var(--text-secondary);white-space:pre-wrap">${UI.esc(draft.text_content)}</div>
@@ -167,15 +189,15 @@ const ScreenCreate = (() => {
         </div>
 
         <div style="margin-top:var(--space-lg);display:flex;gap:var(--space-md)">
-          <button class="btn btn-ghost btn-sm btn-full" id="back-to-draft-btn">← Back to draft</button>
-          <button class="btn btn-danger btn-sm" id="archive-ready-btn" title="Archive">${Icons.trash}</button>
+          <button class="btn btn-ghost btn-sm btn-full" id="back-to-draft-btn">← Вернуть в черновик</button>
+          <button class="btn btn-danger btn-sm" id="archive-ready-btn" title="Архивировать">${Icons.trash}</button>
         </div>
       ` : ''}
 
       ${draft.status === 'published' ? `
         <div class="card card-accent" style="text-align:center">
           <div style="font-size:40px;margin-bottom:var(--space-md)">🎉</div>
-          <div style="font-size:var(--font-size-xl);font-weight:var(--font-weight-bold)">Published</div>
+          <div style="font-size:var(--font-size-xl);font-weight:var(--font-weight-bold)">Опубликован</div>
           <div style="color:var(--text-secondary);margin-top:var(--space-sm)">${UI.esc(draft.title)}</div>
         </div>
       ` : ''}
@@ -197,9 +219,9 @@ const ScreenCreate = (() => {
             topic: document.getElementById('draft-topic').value.trim(),
           });
           _updateDraftInStore(updated);
-          UI.toast('Draft saved', 'success');
+          UI.toast('Черновик сохранён', 'success');
         } catch (e) { UI.toast(e.message, 'error'); }
-      }, 'Saving…');
+      }, 'Сохранение…');
     });
 
     document.getElementById('gen-text-btn')?.addEventListener('click', async function() {
@@ -208,9 +230,9 @@ const ScreenCreate = (() => {
           const result = await API.generateText(pid, draft.id);
           _updateDraftInStorePartial(draft.id, { text_content: result.draft_text_content });
           _renderEditor();
-          UI.toast('Text generated!', 'success');
+          UI.toast('Текст сгенерирован!', 'success');
         } catch (e) { UI.toast(e.message, 'error'); }
-      }, 'Generating…');
+      }, 'Генерация…');
     });
 
     document.getElementById('gen-image-btn')?.addEventListener('click', async function() {
@@ -219,21 +241,19 @@ const ScreenCreate = (() => {
           const result = await API.generateImage(pid, draft.id);
           _updateDraftInStorePartial(draft.id, { image_url: result.draft_image_url });
           _renderEditor();
-          UI.toast('Image generated!', 'success');
+          UI.toast('Изображение сгенерировано!', 'success');
         } catch (e) { UI.toast(e.message, 'error'); }
-      }, 'Generating…');
+      }, 'Генерация…');
     });
 
     document.getElementById('mark-ready-btn')?.addEventListener('click', async function() {
-      // Client-side validation: must have some content
       const textVal = document.getElementById('draft-text')?.value?.trim();
       if (!textVal && !draft.image_url) {
-        UI.toast('Add text or image content before marking ready', 'error');
+        UI.toast('Добавьте текст или изображение перед отметкой', 'error');
         return;
       }
       await UI.withButtonLoading(this, async () => {
         try {
-          // Auto-save first
           const updated = await API.updateDraft(pid, draft.id, {
             title: document.getElementById('draft-title')?.value?.trim(),
             text_content: document.getElementById('draft-text')?.value,
@@ -243,9 +263,9 @@ const ScreenCreate = (() => {
           const ready = await API.markReady(pid, draft.id);
           _updateDraftInStore(ready);
           _renderEditor();
-          UI.toast('Draft marked as ready', 'success');
+          UI.toast('Черновик готов к публикации', 'success');
         } catch (e) { UI.toast(e.message, 'error'); }
-      }, 'Saving…');
+      }, 'Сохранение…');
     });
 
     document.getElementById('back-to-draft-btn')?.addEventListener('click', async function() {
@@ -255,7 +275,7 @@ const ScreenCreate = (() => {
           _updateDraftInStore(d);
           _renderEditor();
         } catch (e) { UI.toast(e.message, 'error'); }
-      }, 'Updating…');
+      }, 'Обновление…');
     });
 
     document.getElementById('publish-btn')?.addEventListener('click', async function() {
@@ -265,12 +285,12 @@ const ScreenCreate = (() => {
           if (result.published) {
             _updateDraftInStorePartial(draft.id, { status: result.status });
             _renderEditor();
-            UI.toast('Published successfully!', 'success');
+            UI.toast('Успешно опубликовано!', 'success');
           } else {
-            UI.toast('Publish returned without confirmation', 'error');
+            UI.toast('Публикация не подтверждена', 'error');
           }
         } catch (e) { UI.toast(e.message, 'error'); }
-      }, 'Publishing…');
+      }, 'Публикация…');
     });
 
     document.getElementById('schedule-btn')?.addEventListener('click', () => {
@@ -279,7 +299,7 @@ const ScreenCreate = (() => {
 
     const archiveBtn = document.getElementById('archive-btn') || document.getElementById('archive-ready-btn');
     archiveBtn?.addEventListener('click', async function() {
-      const confirmed = await UI.confirm('Archive this draft? This action cannot be undone.', 'Archive');
+      const confirmed = await UI.confirm('Архивировать черновик? Это действие нельзя отменить.', 'Архивировать');
       if (!confirmed) return;
       await UI.withButtonLoading(this, async () => {
         try {
@@ -287,9 +307,9 @@ const ScreenCreate = (() => {
           _updateDraftInStore(d);
           _mode = 'list';
           _renderList();
-          UI.toast('Draft archived', 'success');
+          UI.toast('Черновик архивирован', 'success');
         } catch (e) { UI.toast(e.message, 'error'); }
-      }, 'Archiving…');
+      }, 'Архивация…');
     });
   }
 
@@ -301,27 +321,27 @@ const ScreenCreate = (() => {
 
     const html = `
       <div class="input-group">
-        <label class="input-label" for="schedule-time">Publish at (UTC)</label>
+        <label class="input-label" for="schedule-time">Дата публикации (UTC)</label>
         <input class="input" type="datetime-local" id="schedule-time" value="${defaultTime}" />
       </div>
-      <button class="btn btn-primary btn-full" id="confirm-schedule-btn">${Icons.clock} Schedule</button>
+      <button class="btn btn-primary btn-full" id="confirm-schedule-btn">${Icons.clock} Запланировать</button>
     `;
-    const modal = UI.showModal(html, 'Schedule post');
+    const modal = UI.showModal(html, 'Запланировать пост');
     modal.querySelector('#confirm-schedule-btn').addEventListener('click', async function() {
       const val = modal.querySelector('#schedule-time').value;
-      if (!val) { UI.toast('Pick a time', 'error'); return; }
+      if (!val) { UI.toast('Выберите время', 'error'); return; }
       const selectedTime = new Date(val);
-      if (selectedTime <= new Date()) { UI.toast('Schedule time must be in the future', 'error'); return; }
+      if (selectedTime <= new Date()) { UI.toast('Время должно быть в будущем', 'error'); return; }
       await UI.withButtonLoading(this, async () => {
         try {
           const isoTime = selectedTime.toISOString();
           await API.scheduleDraft(pid, did, { publish_at: isoTime });
           UI.closeModal();
-          UI.toast('Post scheduled!', 'success');
+          UI.toast('Пост запланирован!', 'success');
           await App.loadProjectData();
           _renderEditor();
         } catch (e) { UI.toast(e.message, 'error'); }
-      }, 'Scheduling…');
+      }, 'Планирование…');
     });
   }
 
@@ -335,7 +355,7 @@ const ScreenCreate = (() => {
 
   async function newDraft() {
     const project = Store.getActiveProject();
-    if (!project) { UI.toast('No active project', 'error'); return; }
+    if (!project) { UI.toast('Нет активного проекта', 'error'); return; }
     const prefs = Store.get('preferences');
     try {
       const draft = await API.createDraft(project.id, {

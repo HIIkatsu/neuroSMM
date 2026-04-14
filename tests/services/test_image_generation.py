@@ -204,7 +204,9 @@ class TestGenerateImageForDraft:
         result = _failure_result(error="API timeout")
         service = _build_service(draft=draft, project=project, provider_result=result)
 
-        with pytest.raises(ExternalServiceError, match="API timeout"):
+        with pytest.raises(
+            ExternalServiceError, match="сгенерировать изображение|generation failed"
+        ):
             await service.generate_image_for_draft(draft_id=10, user_id=1)
 
     async def test_empty_content_raises_external_error(self) -> None:
@@ -214,7 +216,7 @@ class TestGenerateImageForDraft:
         result = _empty_result()
         service = _build_service(draft=draft, project=project, provider_result=result)
 
-        with pytest.raises(ExternalServiceError, match="empty content"):
+        with pytest.raises(ExternalServiceError, match="пустой результат|empty content"):
             await service.generate_image_for_draft(draft_id=10, user_id=1)
 
     async def test_prompt_includes_draft_context(self) -> None:

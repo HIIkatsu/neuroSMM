@@ -103,14 +103,14 @@ class PreviewService:
         """Verify that the user owns the project."""
         project = await self._project_repo.get_by_id(project_id)
         if project.owner_id != user_id:
-            raise AuthorizationError("You do not have access to this project")
+            raise AuthorizationError("У вас нет доступа к этому проекту")
 
     @staticmethod
     def _validate_previewable(draft: Draft) -> None:
         """Ensure the draft is in a state that allows preview."""
         if draft.status not in _PREVIEWABLE_STATES:
             raise ValidationError(
-                f"Cannot preview draft in '{draft.status}' status"
+                f"Нельзя просмотреть черновик в статусе '{draft.status}'"
             )
 
     @staticmethod

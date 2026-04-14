@@ -40,7 +40,8 @@ def _get_text_generation_service(
 
     api_key = settings.openai_api_key.get_secret_value()
     if api_key:
-        provider = OpenAITextProvider(api_key=api_key)
+        base_url = settings.openai_base_url or None
+        provider = OpenAITextProvider(api_key=api_key, base_url=base_url)
     else:
         provider = StubTextProvider()  # type: ignore[assignment]
 
@@ -56,7 +57,8 @@ def _get_image_generation_service(
 
     api_key = settings.openai_api_key.get_secret_value()
     if api_key:
-        provider = OpenAIImageProvider(api_key=api_key)
+        base_url = settings.openai_base_url or None
+        provider = OpenAIImageProvider(api_key=api_key, base_url=base_url)
     else:
         provider = StubImageProvider()  # type: ignore[assignment]
 
